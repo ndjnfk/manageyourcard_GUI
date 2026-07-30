@@ -1,0 +1,175 @@
+<!-- One shop's cards, seen by an admin — what the Cards button on the shops
+     table opens.
+
+     Read-only on purpose: an admin can edit a shop's own details, but a card
+     belongs to that shop's working register and is theirs to change. -->
+<app-admin-shell (dataChanged)="reload()">
+  <header class="mb-4">
+    <a class="admin-cards__back d-inline-flex align-items-center gap-1 mb-2" routerLink="/admin/shopkeepers">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 6 8 12l6 6" />
+      </svg>
+      All shopkeepers
+    </a>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+      <div>
+        @if (shop(); as shop) {
+          <p class="myc-eyebrow mb-2">{{ shop.shopkeeperId }} · {{ shop.ownerName }}</p>
+          <h1 class="myc-title m-0">{{ shop.shopName }}</h1>
+          <p class="mt-2 mb-0 text-body-secondary">{{ shop.email }} · {{ shop.mobile }}</p>
+        } @else {
+          <h1 class="myc-title m-0">Cards</h1>
+        }
+      </div>
+
+      <label class="myc-field admin-cards__search d-flex align-items-center gap-2">
+        <span class="visually-hidden">Search this shop's cards</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" />
+          <path d="m16 16 4.5 4.5" />
+        </svg>
+        <input
+          type="search"
+          class="myc-field__input"
+          placeholder="Card no, customer or mobile"
+          autocomplete="off"
+          enterkeyhint="search"
+          [value]="query()"
+          (input)="onSearch($event)"
+        />
+      </label>
+    </div>
+  </header>
+
+  <div class="myc-chip-rail d-flex gap-2 mb-3" role="group" aria-label="Which cards">
+    <button
+      type="button"
+      class="myc-chip"
+      [class.myc-chip--on]="!completed()"
+      [attr.aria-pressed]="!completed()"
+      (click)="setCompleted(false)"
+    >
+      Live register
+    </button>
+    <button
+      type="button"
+      class="myc-chip"
+      [class.myc-chip--on]="completed()"
+      [attr.aria-pressed]="completed()"
+      (click)="setCompleted(true)"
+    >
+      Completed
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="myc-glass text-center p-4 p-lg-5" role="status">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      Loading cards…
+    </div>
+  } @else if (loadError(); as message) {
+    <div class="myc-glass text-center p-4 p-lg-5">
+      <p class="fs-5 fw-semibold m-0">Could not load these cards</p>
+      <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">{{ message }}</p>
+      <button type="button" class="myc-btn-ghost" (click)="reload()">Try again</button>
+    </div>
+  } @else if (!cards().length) {
+    <div class="myc-glass text-center p-4 p-lg-5">
+      <p class="fs-5 fw-semibold m-0">
+        @if (query()) {
+          No card matches that
+        } @else if (completed()) {
+          This shop hasn't completed any cards
+        } @else {
+          This shop has no cards yet
+        }
+      </p>
+    </div>
+  } @else {
+    <p class="small text-body-tertiary mb-3" aria-live="polite">
+      Showing {{ firstShown() }}–{{ lastShown() }} of {{ total() }}
+    </p>
+
+    <div class="myc-glass admin-cards__panel">
+      <table class="admin-cards__table w-100 m-0">
+        <thead class="d-none d-lg-table-header-group">
+          <tr>
+            <th scope="col">Card</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Issued</th>
+            <th scope="col">Due</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (card of cards(); track card.cardId) {
+            <tr class="admin-cards__row">
+              <td data-label="Card">
+                <span class="d-block fw-semibold">{{ card.cardNumber }}</span>
+                <span class="admin-cards__id d-block">{{ card.cardId }}</span>
+              </td>
+              <td data-label="Customer">
+                <span class="d-block">{{ card.customerName }}</span>
+                <span class="d-block text-body-tertiary admin-cards__meta">
+                  {{ card.customerMobile }}
+                </span>
+                @if (card.notes) {
+                  <span class="d-block text-body-tertiary admin-cards__meta">{{ card.notes }}</span>
+                }
+              </td>
+              <td data-label="Issued">{{ card.issueDate }}</td>
+              <td data-label="Due">
+                <span class="d-block">{{ card.dueDate }}</span>
+                @if (card.renewalCount) {
+                  <span class="d-block text-body-tertiary admin-cards__meta">
+                    Renewed {{ card.renewalCount }}×@if (card.renewedAt) {
+                      on {{ card.renewedAt | date: 'd-MMM-y' }}
+                    }
+                  </span>
+                }
+              </td>
+              <td data-label="Status">
+                <span class="badge rounded-pill" [class]="badgeFor(card.status)">
+                  {{ card.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (lastPage() > 1) {
+      <nav class="d-flex justify-content-center align-items-center gap-2 mt-4" aria-label="Pages">
+        <button
+          type="button"
+          class="myc-btn-ghost myc-btn-sm"
+          [disabled]="page() === 1"
+          (click)="goToPage(page() - 1)"
+        >
+          Previous
+        </button>
+        @for (number of pageNumbers(); track number) {
+          <button
+            type="button"
+            class="myc-chip admin-cards__page"
+            [class.myc-chip--on]="number === page()"
+            [attr.aria-current]="number === page() ? 'page' : null"
+            (click)="goToPage(number)"
+          >
+            {{ number }}
+          </button>
+        }
+        <button
+          type="button"
+          class="myc-btn-ghost myc-btn-sm"
+          [disabled]="page() === lastPage()"
+          (click)="goToPage(page() + 1)"
+        >
+          Next
+        </button>
+      </nav>
+    }
+  }
+</app-admin-shell>

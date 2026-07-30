@@ -1,13 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
-  <title>ManageYourCardGUI</title>
+  <title>manageyourcard</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- viewport-fit=cover so the layout can reach into the safe areas on notched
+       phones, which is what makes it read as an app rather than a web page. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0518">
+  <!-- Order matters: browsers take the LAST icon they understand, so the .ico
+       fallback goes first and the SVG mark last, otherwise the leftover
+       Angular favicon.ico wins and the brand mark never shows. -->
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
 </head>
-<body>
+<!-- Inline background prevents a white flash before styles.css arrives. -->
+<body style="background-color:#0a0518">
   <app-root></app-root>
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
 </body>
 </html>

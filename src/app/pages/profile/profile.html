@@ -1,0 +1,218 @@
+<!-- Shop profile: the photo, the trading name, the owner's name and the mobile.
+
+     Wrapped in the shared signed-in chrome (src/app/shared/app-shell), so the
+     app bar, tab bar and drawer are the same here as everywhere else behind
+     the guard. This file is only what is particular to the profile.
+
+     The ShopkeeperID and the email are shown but not editable — the ID is the
+     key every card is filed under, and changing an email is an account
+     security matter with its own flow rather than a field on a form. -->
+<app-shell>
+    @if (shop(); as shop) {
+      <div class="profile__col mx-auto">
+        <header class="mb-4">
+          <p class="myc-eyebrow mb-2">{{ shop.shopkeeperId }}</p>
+          <h1 class="myc-title m-0">Your <span class="myc-title-accent">profile</span></h1>
+          <p class="mt-2 mb-0 text-body-secondary">
+            How your shop appears to you across the app.
+          </p>
+        </header>
+
+        <!-- ── Photo ─────────────────────────────────────────────────────
+             The input is visually hidden rather than display:none, so it stays
+             in the accessibility tree and keyboard-reachable — a hidden input
+             cannot be focused, and the button alone would leave a screen
+             reader with no file control at all. -->
+        <section class="myc-glass p-4 p-lg-5 mb-3" aria-label="Profile photo">
+          <div class="d-flex flex-column flex-sm-row align-items-center gap-4">
+            <span class="profile__avatar flex-shrink-0" [class.profile__avatar--busy]="uploading()">
+              @if (shop.photoUrl) {
+                <img
+                  class="profile__photo"
+                  [src]="shop.photoUrl"
+                  [alt]="'Profile photo for ' + shop.shopName"
+                />
+              } @else {
+                <span class="profile__initials" aria-hidden="true">{{ initials() }}</span>
+              }
+
+              @if (uploading()) {
+                <span class="profile__spinner" role="status">
+                  <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                  <span class="visually-hidden">Updating your photo</span>
+                </span>
+              }
+            </span>
+
+            <div class="text-center text-sm-start flex-grow-1">
+              <p class="fw-semibold m-0">Profile photo</p>
+              <p class="profile__hint text-body-secondary mt-1 mb-3">
+                JPG, PNG or WebP, up to 2MB. Without one, your initials are used.
+              </p>
+
+              <input
+                #photoInput
+                type="file"
+                class="visually-hidden"
+                id="photo"
+                [accept]="accept"
+                [disabled]="uploading()"
+                (change)="onPhotoChosen($event)"
+              />
+
+              <div class="d-flex flex-wrap justify-content-center justify-content-sm-start gap-2">
+                <button
+                  type="button"
+                  class="myc-btn-primary myc-btn-sm"
+                  [disabled]="uploading()"
+                  (click)="choosePhoto(photoInput)"
+                >
+                  {{ shop.photoUrl ? 'Change photo' : 'Upload photo' }}
+                </button>
+
+                @if (shop.photoUrl) {
+                  <button
+                    type="button"
+                    class="myc-btn-ghost myc-btn-sm"
+                    [disabled]="uploading()"
+                    (click)="removePhoto()"
+                  >
+                    Remove
+                  </button>
+                }
+              </div>
+
+              @if (photoError(); as message) {
+                <p class="profile__hint text-danger mt-2 mb-0" role="alert">{{ message }}</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Details ───────────────────────────────────────────────── -->
+        <section class="myc-glass p-4 p-lg-5" aria-label="Shop details">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+            @if (formError(); as message) {
+              <div class="alert alert-danger d-flex align-items-start gap-2 mb-3" role="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.5" />
+                  <path d="M12 7.8v4.6M12 15.8v.2" />
+                </svg>
+                <span>{{ message }}</span>
+              </div>
+            }
+
+            @if (saved()) {
+              <div class="alert alert-success d-flex align-items-start gap-2 mb-3" role="status">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+                  <path d="m5 12.5 4.5 4.5L19 7.5" />
+                </svg>
+                <span>Saved.</span>
+              </div>
+            }
+
+            <div class="mb-3">
+              <label class="myc-label" for="shopName">Shop name</label>
+              <input
+                id="shopName"
+                class="myc-input"
+                [class.myc-input--invalid]="showError('shopName')"
+                formControlName="shopName"
+                type="text"
+                autocomplete="organization"
+                maxlength="80"
+                enterkeyhint="next"
+                [attr.aria-invalid]="showError('shopName')"
+                aria-describedby="shopName-msg"
+              />
+              <p class="profile__hint mt-1 mb-0" id="shopName-msg">
+                @if (showError('shopName')) {
+                  <span class="text-danger">{{ errorFor('shopName') }}</span>
+                } @else {
+                  <span class="text-body-tertiary">As your customers know it.</span>
+                }
+              </p>
+            </div>
+
+            <div class="mb-3">
+              <label class="myc-label" for="ownerName">Owner name</label>
+              <input
+                id="ownerName"
+                class="myc-input"
+                [class.myc-input--invalid]="showError('ownerName')"
+                formControlName="ownerName"
+                type="text"
+                autocomplete="name"
+                maxlength="60"
+                enterkeyhint="next"
+                [attr.aria-invalid]="showError('ownerName')"
+                aria-describedby="ownerName-msg"
+              />
+              <p class="profile__hint mt-1 mb-0" id="ownerName-msg">
+                @if (showError('ownerName')) {
+                  <span class="text-danger">{{ errorFor('ownerName') }}</span>
+                } @else {
+                  <span class="text-body-tertiary">
+                    Used to greet you, and for your initials when there's no photo.
+                  </span>
+                }
+              </p>
+            </div>
+
+            <div class="mb-4">
+              <label class="myc-label" for="mobile">Mobile number</label>
+              <input
+                id="mobile"
+                class="myc-input"
+                [class.myc-input--invalid]="showError('mobile')"
+                formControlName="mobile"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                maxlength="17"
+                enterkeyhint="done"
+                [attr.aria-invalid]="showError('mobile')"
+                aria-describedby="mobile-msg"
+              />
+              <p class="profile__hint mt-1 mb-0" id="mobile-msg">
+                @if (showError('mobile')) {
+                  <span class="text-danger">{{ errorFor('mobile') }}</span>
+                } @else {
+                  <span class="text-body-tertiary">How we reach you about your account.</span>
+                }
+              </p>
+            </div>
+
+            <!-- ── Fixed details ───────────────────────────────────────
+                 Shown because they are part of the profile, as inputs they
+                 are not: the ID is what every card is filed under, and an
+                 email change needs verifying rather than typing. -->
+            <dl class="profile__fixed mb-4">
+              <div class="d-flex justify-content-between gap-3 py-2">
+                <dt class="fw-medium text-body-secondary">Shopkeeper ID</dt>
+                <dd class="profile__id m-0 text-end">{{ shop.shopkeeperId }}</dd>
+              </div>
+              <div class="d-flex justify-content-between gap-3 py-2">
+                <dt class="fw-medium text-body-secondary">Email</dt>
+                <dd class="m-0 text-end text-break">{{ shop.email }}</dd>
+              </div>
+            </dl>
+
+            <button
+              type="submit"
+              class="myc-btn-primary w-100"
+              [disabled]="saving()"
+              [attr.aria-busy]="saving()"
+            >
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                Saving…
+              } @else {
+                Save changes
+              }
+            </button>
+          </form>
+        </section>
+      </div>
+    }
+</app-shell>

@@ -1,0 +1,50 @@
+// Only what is unique to this page. The glass card, the inputs, the labels,
+// the buttons and the safe-area helpers are all global in
+// src/styles/_theme.scss; layout and spacing are Bootstrap utilities.
+
+:host {
+  display: block;
+}
+
+.register {
+  // The form is short — hold the footer note off the bottom of tall screens
+  // rather than letting the card float in the middle of nowhere.
+  min-height: 100dvh;
+}
+
+/// Single readable column. Narrower than .myc-measure-sm: a form reads worse
+/// the wider its fields get, because the label and the value drift apart.
+.register__col {
+  max-width: 32rem;
+}
+
+/// Sits under every field, carrying either the hint or the error. Matches the
+/// dashboard's sub-label size.
+.register__hint {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+// The password field and its eye button are shared with the sign-in page, so
+// they live in src/styles/_theme.scss as .myc-pw*.
+
+.register__summary > div + div {
+  border-top: 1px solid var(--myc-glass-border);
+}
+
+/// The assigned ShopkeeperID on the confirmation. Sits inside the glass card,
+/// so it uses the lit border rather than another shadow — two stacked glass
+/// shadows read as a rendering mistake.
+.register__id {
+  box-shadow: none;
+}
+
+/// Monospaced and letter-spaced: this is an identifier that gets read out and
+/// copied down, and "SHP-00001" is only unambiguous if the 0s and the O it
+/// hasn't got are told apart at a glance.
+.register__id-value {
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Segoe UI Mono", Menlo, monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}

@@ -1,0 +1,75 @@
+// Only what is unique to this page lives here. Everything reusable (section
+// rhythm, glass surfaces, titles, the snap rail, buttons) is global in
+// src/styles/_theme.scss, and all layout/spacing/typography comes from
+// Bootstrap utilities in the template — that keeps this file inside the
+// per-component style budget as the page grows.
+
+:host {
+  display: block;
+}
+
+// ── Hero card stack ──────────────────────────────────────────────────────────
+// Pure CSS so the hero costs no image requests. `--fan` controls how far the
+// back cards splay out, and shrinks with the viewport.
+
+.card-stack {
+  position: relative;
+  height: clamp(15rem, 42vw, 21rem);
+  margin-top: clamp(2.5rem, 7vw, 4rem);
+  --fan: clamp(3.5rem, 13vw, 8.5rem);
+}
+
+.card-art {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: min(20rem, 78vw);
+  aspect-ratio: 1.586; // ISO/IEC 7810 ID-1, i.e. an actual card
+  border-radius: var(--myc-radius);
+  border: 1px solid var(--myc-glass-border);
+  box-shadow: var(--myc-glass-shadow);
+}
+
+.card-art--back {
+  transform: translate(calc(-50% - var(--fan)), 0.75rem) rotate(-14deg);
+  background: linear-gradient(135deg, #241249 0%, #140b2e 100%);
+  z-index: 1;
+}
+
+.card-art--mid {
+  transform: translate(calc(-50% + var(--fan)), 0.75rem) rotate(14deg);
+  background: linear-gradient(135deg, #1a0f38 0%, #0d0722 100%);
+  z-index: 2;
+}
+
+.card-art--front {
+  transform: translate(-50%, 2.75rem);
+  background: var(--myc-gradient-primary);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    var(--myc-glass-shadow),
+    var(--myc-glow-violet);
+  z-index: 3;
+  animation: card-float 6s ease-in-out infinite;
+}
+
+@keyframes card-float {
+  0%,
+  100% {
+    transform: translate(-50%, 2.75rem);
+  }
+  50% {
+    transform: translate(-50%, 2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-art--front {
+    animation: none;
+  }
+}
+
+/// Card numbers and due dates — small, but below Bootstrap's .small (0.875em).
+.card-art__meta {
+  font-size: 0.8rem;
+}

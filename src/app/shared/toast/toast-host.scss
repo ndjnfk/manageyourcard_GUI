@@ -1,0 +1,194 @@
+// Toasts, centred over the page.
+//
+// Two halves: a full-viewport layer that blurs the page while something is
+// showing, and the glass panel that sits on top of it. The blur is what
+// separates the two — the panel uses the same translucent surface as the rest
+// of the app, and against the bare aurora canvas it disappeared into whatever
+// was behind it.
+
+@use "../../../styles/mixins" as mixins;
+
+:host {
+  display: contents;
+}
+
+/// Covers the viewport so the stack can be centred in it, and so the page can
+/// be blurred behind it.
+.toast-host {
+  position: fixed;
+  inset: 0;
+  z-index: 1080; // above the dialogs, which are the only thing higher
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem;
+  // Never swallows a click: an invisible full-screen layer that did would be
+  // far worse than no toast at all. The blur below is purely visual, and the
+  // page stays usable underneath it.
+  pointer-events: none;
+  transition:
+    background 200ms ease,
+    backdrop-filter 200ms ease;
+}
+
+/// Only while something is showing.
+///
+/// Blurring the *page* is what makes the toast stand out — the toast itself
+/// stays sharp and solid. Without this the panel sat flat against the aurora
+/// canvas and disappeared into it.
+///
+/// Driven by a class rather than :has(), so it does not depend on selector
+/// support, and so the transition has something to animate between.
+.toast-host--on {
+  background: rgba(6, 3, 18, 0.45);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+}
+
+/// The app's own glass, same as every other panel.
+///
+/// It only works here because of the blur behind it: against the bare aurora
+/// canvas a translucent panel disappeared into the content, which is what
+/// .toast-host--on now solves. The heavier shadow is what still lifts it off
+/// the page.
+.toast-host__item {
+  @include mixins.glass(var(--myc-glass-bg-strong), var(--myc-radius));
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: min(27rem, 100%);
+  min-height: 9.5rem;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: toast-in 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  pointer-events: auto;
+}
+
+/// A bar down the leading edge, coloured by kind. Carries the meaning even
+/// where the icon is missed, and finishes the box.
+.toast-host__item::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 0.3rem;
+}
+
+/// A tinted disc behind the icon, so the kind reads before the words do.
+.toast-host__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+}
+
+.toast-host__body {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.toast-host__message {
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.toast-host__detail {
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--myc-text-muted);
+}
+
+/// Small, quiet, and still a 44px target thanks to the padding — a close
+/// button that has to be aimed at is worse than none.
+.toast-host__close {
+  appearance: none;
+  flex-shrink: 0;
+  margin: -0.35rem -0.35rem 0 0;
+  padding: 0.35rem;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--myc-text-faint);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--myc-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--myc-violet-bright);
+    outline-offset: 1px;
+  }
+}
+
+// ── Kinds ────────────────────────────────────────────────────────────────────
+// The glass surface is the same for all three — it is what makes a toast look
+// like part of this app. The edge bar, the border and the icon say which kind
+// it is.
+
+.toast-host__item--success {
+  border-color: rgba(61, 217, 192, 0.45);
+
+  &::before {
+    background: var(--myc-teal);
+  }
+
+  .toast-host__icon {
+    background: rgba(61, 217, 192, 0.22);
+    color: var(--myc-teal);
+  }
+}
+
+.toast-host__item--error {
+  border-color: rgba(255, 77, 109, 0.5);
+
+  &::before {
+    background: var(--myc-red);
+  }
+
+  .toast-host__icon {
+    background: rgba(255, 77, 109, 0.24);
+    color: var(--myc-red);
+  }
+}
+
+.toast-host__item--info {
+  border-color: var(--myc-glass-border-lit);
+
+  &::before {
+    background: var(--myc-violet-bright);
+  }
+
+  .toast-host__icon {
+    background: rgba(168, 85, 247, 0.24);
+    color: var(--myc-violet-bright);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-host {
+    transition: none;
+  }
+
+  .toast-host__item {
+    animation: none;
+  }
+}

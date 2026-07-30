@@ -1,0 +1,183 @@
+<!-- History — the cards this shop has finished with.
+
+     Wrapped in the shared signed-in chrome (src/app/shared/app-shell), so the
+     app bar, tab bar and drawer are the same here as on the dashboard. This
+     file is only what is particular to history.
+
+     Read-only on purpose. Reopening a card happens in the edit dialog on the
+     dashboard, where the rest of the card's details are — putting a second
+     copy of that control here would mean two places to keep in step. -->
+<app-shell>
+  <!-- Dropped into the app bar's search slot, so searching sits where it does
+       on every other page rather than moving about.
+
+       Hidden with a class rather than wrapped in @if: the element has to exist
+       in the template for <ng-content select> to match it, and there is
+       nothing to search until some cards have been closed. -->
+  <label
+    slot="search"
+    class="myc-field d-flex align-items-center gap-2 w-100"
+    [class.d-none]="!cards().length"
+  >
+    <span class="visually-hidden">Search completed cards</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+    <input
+      type="search"
+      class="myc-field__input"
+      placeholder="Card no, customer or mobile"
+      autocomplete="off"
+      enterkeyhint="search"
+      [value]="query()"
+      (input)="onSearch($event)"
+    />
+  </label>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+      <div>
+        <p class="myc-eyebrow mb-2">Completed</p>
+        <h1 class="myc-title m-0">Card <span class="myc-title-accent">history</span></h1>
+        <p class="mt-2 mb-0 text-body-secondary">
+          Cards you've closed. Nothing here is counted or chased — it's kept so you can look it up.
+        </p>
+      </div>
+
+      <!-- Below lg the app bar has no room for the search, so it appears here
+           instead — the same field, moved rather than duplicated. -->
+      @if (cards().length) {
+        <label class="myc-field history__search d-lg-none d-flex align-items-center gap-2">
+          <span class="visually-hidden">Search completed cards</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" />
+            <path d="m16 16 4.5 4.5" />
+          </svg>
+          <input
+            type="search"
+            class="myc-field__input"
+            placeholder="Card no, customer or mobile"
+            autocomplete="off"
+            enterkeyhint="search"
+            [value]="query()"
+            (input)="onSearch($event)"
+          />
+        </label>
+      }
+    </div>
+
+    <section class="mt-4" aria-label="Completed cards">
+      @if (loading()) {
+        <div class="myc-glass text-center p-4 p-lg-5" role="status">
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          Loading your history…
+        </div>
+      } @else if (loadError(); as message) {
+        <div class="myc-glass text-center p-4 p-lg-5">
+          <p class="fs-5 fw-semibold m-0">Could not load your history</p>
+          <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">{{ message }}</p>
+          <button type="button" class="myc-btn-ghost" (click)="load()">Try again</button>
+        </div>
+      } @else if (!cards().length) {
+        <!-- Nothing closed yet is a perfectly normal state, not a problem —
+             so this explains how a card gets here rather than apologising. -->
+        <div class="myc-glass myc-glow-panel text-center p-4 p-lg-5">
+          <span
+            class="myc-icon-tile d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+            aria-hidden="true"
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          <p class="fs-5 fw-semibold m-0">Nothing completed yet</p>
+          <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">
+            When a card's work is done, open it on your dashboard, press Edit and turn on
+            "Completed / Closed". It stops being tracked and moves here.
+          </p>
+          <a class="myc-btn-primary" routerLink="/dashboard">Back to your register</a>
+        </div>
+      } @else if (!visibleCards().length) {
+        <div class="myc-glass text-center p-4 p-lg-5">
+          <p class="fs-5 fw-semibold m-0">No completed card matches that</p>
+          <p class="myc-measure-sm mx-auto mt-2 mb-0 text-body-secondary lh-base">
+            Try a different card number, customer name or mobile number.
+          </p>
+        </div>
+      } @else {
+        <p class="small text-body-tertiary mb-3">
+          Showing {{ visibleCards().length }} of {{ cards().length }} completed
+        </p>
+
+        <div class="row g-3">
+          @for (card of visibleCards(); track card.cardId) {
+            <div class="col-12 col-md-6 col-xl-4">
+              <article class="myc-glass history__card h-100 p-3 p-lg-4">
+                <div class="d-flex align-items-start gap-3">
+                  <span
+                    class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center small fw-semibold"
+                    aria-hidden="true"
+                  >
+                    {{ card.initials }}
+                  </span>
+                  <div class="flex-grow-1 min-w-0">
+                    <h2 class="fs-6 fw-semibold mb-1 text-truncate">{{ card.customer }}</h2>
+                    @if (card.renewalCount) {
+                      <p class="history__renewed d-inline-flex align-items-center gap-1 mb-1">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M20 11.5a8 8 0 1 1-2.4-5.2" />
+                          <path d="M20 4v4.5h-4.5" />
+                        </svg>
+                        @if (card.renewalCount > 1) {
+                          Renewed {{ card.renewalCount }}×
+                        } @else {
+                          Renewed
+                        }
+                        @if (card.renewedOn) {
+                          on {{ card.renewedOn | date: 'd-MMM-y' }}
+                        }
+                      </p>
+                    }
+                    <p class="m-0 history__meta text-body-tertiary text-truncate">
+                      {{ card.cardNumber }}@if (card.notes) { · {{ card.notes }} }
+                    </p>
+                  </div>
+                  <span class="badge rounded-pill flex-shrink-0 text-bg-success">Completed</span>
+                </div>
+
+                <dl class="history__facts mt-3 pt-3 mb-0 border-top">
+                  @if (card.completed) {
+                    <div class="d-flex justify-content-between gap-3 py-1">
+                      <dt class="fw-normal text-body-secondary">Closed</dt>
+                      <dd class="m-0 text-end">{{ card.completed | date: 'd MMM y' }}</dd>
+                    </div>
+                  }
+                  @if (card.issued) {
+                    <div class="d-flex justify-content-between gap-3 py-1">
+                      <dt class="fw-normal text-body-secondary">Issued</dt>
+                      <dd class="m-0 text-end">{{ card.issued | date: 'd MMM y' }}</dd>
+                    </div>
+                  }
+                  @if (card.due) {
+                    <div class="d-flex justify-content-between gap-3 py-1">
+                      <dt class="fw-normal text-body-secondary">Was due</dt>
+                      <dd class="m-0 text-end">{{ card.due | date: 'd MMM y' }}</dd>
+                    </div>
+                  }
+                </dl>
+
+                <!-- tel: on a closed card too — "what did you do for me last
+                     year" is a phone call, and the number is right here. -->
+                <a class="myc-btn-ghost myc-btn-sm w-100 mt-3" [href]="'tel:' + card.mobile">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6.6 3.5h3l1.5 3.8-2 1.3a11 11 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" />
+                  </svg>
+                  Call {{ card.mobile }}
+                </a>
+              </article>
+            </div>
+          }
+        </div>
+      }
+    </section>
+</app-shell>

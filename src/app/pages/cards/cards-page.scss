@@ -1,0 +1,81 @@
+// All cards. Only what is unique to it — the canvas, the glass surfaces, the
+// chips, the search field and the buttons are all global in
+// src/styles/_theme.scss, and the app bar / tab bar / drawer come from
+// src/app/shared/app-shell.
+
+:host {
+  display: block;
+}
+
+/// The below-lg copy of the search, which appears in the page because the app
+/// bar has no room for it at that width.
+.cards__search {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.cards__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/// A row rather than a tile: this is a list to find one card in, so more of
+/// them on screen matters more than each one being large.
+.cards__row {
+  transition: border-color 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--myc-glass-border-lit);
+    }
+  }
+}
+
+/// Below sm the row wraps: name on its own line, then status, then actions.
+/// These widths only apply once there is room to sit side by side.
+.cards__who {
+  flex-basis: 12rem;
+}
+
+.cards__when {
+  flex-basis: 9rem;
+}
+
+/// Pushed to the end of the row so the actions line up down the list, however
+/// long the names above them are.
+.cards__actions {
+  margin-left: auto;
+}
+
+.cards__meta {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/// Same "Renewed" marker as the dashboard and history, so a card reads the
+/// same wherever it appears.
+.cards__renewed {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid rgba(61, 217, 192, 0.35);
+  border-radius: var(--myc-radius-pill);
+  background: rgba(61, 217, 192, 0.12);
+  color: var(--myc-teal);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/// Page numbers. Square-ish and even-width so the row doesn't shuffle as the
+/// digits change from 9 to 10.
+.cards__page {
+  min-width: 2.5rem;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards__row {
+    transition: none;
+  }
+}

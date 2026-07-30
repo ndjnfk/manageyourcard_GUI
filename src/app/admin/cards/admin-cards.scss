@@ -1,0 +1,105 @@
+// One shop's cards, in the admin panel. Only what is unique to it — the glass
+// panel, the chips and the search field are global in src/styles/_theme.scss.
+
+:host {
+  display: block;
+}
+
+.admin-cards__back {
+  font-size: 0.82rem;
+  color: var(--myc-text-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--myc-text);
+  }
+}
+
+.admin-cards__search {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.admin-cards__panel {
+  overflow: hidden;
+}
+
+.admin-cards__table {
+  border-collapse: collapse;
+
+  th {
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--myc-text-faint);
+    border-bottom: 1px solid var(--myc-glass-border);
+  }
+
+  td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+  }
+}
+
+.admin-cards__id {
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Segoe UI Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--myc-text-faint);
+}
+
+.admin-cards__meta {
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+/// Same treatment as the shops table: below lg the rows become stacked cards,
+/// because five columns on a phone is unreadable however it is squeezed.
+@media (max-width: 991.98px) {
+  .admin-cards__table,
+  .admin-cards__table tbody,
+  .admin-cards__row,
+  .admin-cards__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-cards__row {
+    padding: 0.5rem 0;
+  }
+
+  .admin-cards__row + .admin-cards__row {
+    border-top: 1px solid var(--myc-glass-border);
+  }
+
+  .admin-cards__table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 1rem;
+    text-align: right;
+  }
+
+  .admin-cards__table td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--myc-text-faint);
+    text-align: left;
+  }
+}
+
+@media (min-width: 992px) {
+  .admin-cards__row + .admin-cards__row td {
+    border-top: 1px solid var(--myc-glass-border);
+  }
+}
+
+.admin-cards__page {
+  min-width: 2.5rem;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}

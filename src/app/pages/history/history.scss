@@ -1,0 +1,57 @@
+// The history page. Only what is unique to it — the canvas, the glass cards,
+// the search field and the buttons are all global in src/styles/_theme.scss,
+// and the app bar / tab bar / drawer come from src/app/shared/app-shell.
+
+:host {
+  display: block;
+}
+
+/// The below-lg copy of the search, which appears in the page because the app
+/// bar has no room for it at that width.
+.history__search {
+  width: 100%;
+  max-width: 22rem;
+}
+
+/// Matches the dashboard's card sub-label, so a card reads the same in both
+/// places even though only one of them is interactive.
+.history__meta {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.history__facts {
+  font-size: 0.82rem;
+}
+
+/// Same "Renewed" marker as the dashboard's card tile, so a card reads the
+/// same in both places.
+.history__renewed {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid rgba(61, 217, 192, 0.35);
+  border-radius: var(--myc-radius-pill);
+  background: rgba(61, 217, 192, 0.12);
+  color: var(--myc-teal);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/// Closed cards are deliberately quieter than live ones: they are reference,
+/// not work. Full strength on hover, for when one is actually being read.
+.history__card {
+  opacity: 0.88;
+  transition: opacity 160ms ease;
+
+  &:hover,
+  &:focus-within {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history__card {
+    transition: none;
+  }
+}

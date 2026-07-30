@@ -1,0 +1,234 @@
+<!-- All cards — the whole live register, searchable, filterable and paged.
+
+     Wrapped in the shared signed-in chrome (src/app/shared/app-shell), so the
+     app bar, tab bar and drawer match every other page.
+
+     Rows rather than the dashboard's tiles: this is a list to find one card
+     in, and a row fits more of them on screen while still leaving room for the
+     status and the actions. -->
+<app-shell>
+  <!-- Dropped into the app bar's search slot, so searching sits where it does
+       on every other page rather than moving about. -->
+  <label slot="search" class="myc-field d-flex align-items-center gap-2 w-100">
+    <span class="visually-hidden">Search cards</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+    <input
+      type="search"
+      class="myc-field__input"
+      placeholder="Search card no, customer or mobile"
+      autocomplete="off"
+      enterkeyhint="search"
+      [value]="query()"
+      (input)="onSearch($event)"
+    />
+  </label>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="myc-eyebrow mb-2">Your register</p>
+      <h1 class="myc-title m-0">All <span class="myc-title-accent">cards</span></h1>
+      <p class="mt-2 mb-0 text-body-secondary">
+        Every card still being tracked. Completed ones live under History.
+      </p>
+    </div>
+  </div>
+
+  <!-- Below lg the app bar has no room for the search, so it appears here
+       instead — the same field, moved rather than duplicated. -->
+  <label class="myc-field cards__search d-lg-none d-flex align-items-center gap-2 mt-3">
+    <span class="visually-hidden">Search cards</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+    <input
+      type="search"
+      class="myc-field__input"
+      placeholder="Card no, customer or mobile"
+      autocomplete="off"
+      enterkeyhint="search"
+      [value]="query()"
+      (input)="onSearch($event)"
+    />
+  </label>
+
+  <!-- ── Filters ───────────────────────────────────────────────────────────
+       A rail on phones so five chips don't wrap into three rows and push the
+       list off screen. -->
+  <div class="myc-chip-rail d-flex gap-2 mt-3" role="group" aria-label="Filter cards">
+    @for (option of filters; track option.key) {
+      <button
+        type="button"
+        class="myc-chip"
+        [class.myc-chip--on]="filter() === option.key"
+        [attr.aria-pressed]="filter() === option.key"
+        (click)="setFilter(option.key)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+
+  <section class="mt-3" aria-label="Cards">
+    @if (loading()) {
+      <div class="myc-glass text-center p-4 p-lg-5" role="status">
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        Loading your cards…
+      </div>
+    } @else if (loadError(); as message) {
+      <div class="myc-glass text-center p-4 p-lg-5">
+        <p class="fs-5 fw-semibold m-0">Could not load your cards</p>
+        <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">{{ message }}</p>
+        <button type="button" class="myc-btn-ghost" (click)="retry()">Try again</button>
+      </div>
+    } @else if (!rows().length) {
+      <div class="myc-glass text-center p-4 p-lg-5">
+        <p class="fs-5 fw-semibold m-0">
+          @if (query() || filter() !== 'all') {
+            No card matches that
+          } @else {
+            Your register is empty
+          }
+        </p>
+        <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">
+          @if (query() || filter() !== 'all') {
+            Try a different card number, customer name or mobile number — or clear the filter to
+            see the whole register.
+          } @else {
+            Add your first card from the dashboard and it will appear here.
+          }
+        </p>
+        @if (query() || filter() !== 'all') {
+          <button type="button" class="myc-btn-ghost" (click)="clearSearch(); setFilter('all')">
+            Show all cards
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="small text-body-tertiary mb-3" aria-live="polite">
+        Showing {{ firstShown() }}–{{ lastShown() }} of {{ total() }}
+      </p>
+
+      <ul class="cards__list list-unstyled m-0">
+        @for (card of rows(); track card.cardId) {
+          <li class="myc-glass cards__row d-flex flex-wrap align-items-center gap-3 p-3 p-lg-4">
+            <span
+              class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center small fw-semibold flex-shrink-0"
+              aria-hidden="true"
+            >
+              {{ card.initials }}
+            </span>
+
+            <div class="cards__who flex-grow-1 min-w-0">
+              <p class="fw-semibold m-0 text-truncate">{{ card.customer }}</p>
+              @if (card.renewalCount) {
+                <p class="cards__renewed d-inline-flex align-items-center gap-1 mt-1 mb-0">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 11.5a8 8 0 1 1-2.4-5.2" />
+                    <path d="M20 4v4.5h-4.5" />
+                  </svg>
+                  @if (card.renewalCount > 1) {
+                    Renewed {{ card.renewalCount }}×
+                  } @else {
+                    Renewed
+                  }
+                  @if (card.renewedOn) {
+                    on {{ card.renewedOn | date: 'd-MMM-y' }}
+                  }
+                </p>
+              }
+              <p class="cards__meta text-body-tertiary m-0 text-truncate">
+                {{ card.cardNumber }}@if (card.notes) { · {{ card.notes }} }
+              </p>
+            </div>
+
+            <div class="cards__when text-lg-end">
+              <span class="badge rounded-pill" [class]="card.meta.badge">{{ card.meta.label }}</span>
+              @if (card.due) {
+                <p class="cards__meta text-body-tertiary m-0 mt-1">
+                  Due {{ card.due | date: 'd-MMM-y' }}
+                </p>
+              }
+            </div>
+
+            <div class="cards__actions d-flex gap-2">
+              <a class="myc-btn-ghost myc-btn-sm" [href]="'tel:' + card.mobile">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6.6 3.5h3l1.5 3.8-2 1.3a11 11 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" />
+                </svg>
+                <span class="visually-hidden">Call {{ card.customer }}</span>
+              </a>
+              <button
+                type="button"
+                class="myc-btn-primary myc-btn-sm"
+                [attr.aria-label]="'Edit card ' + card.cardNumber + ' for ' + card.customer"
+                (click)="openEdit(card.cardId)"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
+                  <path d="M14.5 6.5 17.5 9.5" />
+                </svg>
+                Edit
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+
+      <!-- ── Pagination ────────────────────────────────────────────────
+           Only when there is more than one page. A pager showing "1" on its
+           own is noise. -->
+      @if (lastPage() > 1) {
+        <nav class="d-flex justify-content-center align-items-center gap-2 mt-4" aria-label="Pages">
+          <button
+            type="button"
+            class="myc-btn-ghost myc-btn-sm"
+            [disabled]="page() === 1"
+            (click)="goToPage(page() - 1)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 6 8 12l6 6" />
+            </svg>
+            <span class="d-none d-sm-inline">Previous</span>
+            <span class="d-sm-none visually-hidden">Previous page</span>
+          </button>
+
+          <!-- A window around the current page, so forty pages don't render
+               forty buttons. -->
+          @for (number of pageNumbers(); track number) {
+            <button
+              type="button"
+              class="myc-chip cards__page"
+              [class.myc-chip--on]="number === page()"
+              [attr.aria-current]="number === page() ? 'page' : null"
+              (click)="goToPage(number)"
+            >
+              {{ number }}
+            </button>
+          }
+
+          <button
+            type="button"
+            class="myc-btn-ghost myc-btn-sm"
+            [disabled]="page() === lastPage()"
+            (click)="goToPage(page() + 1)"
+          >
+            <span class="d-none d-sm-inline">Next</span>
+            <span class="d-sm-none visually-hidden">Next page</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m10 6 6 6-6 6" />
+            </svg>
+          </button>
+        </nav>
+      }
+    }
+  </section>
+</app-shell>
+
+<!-- Kept outside the shell for the same reason as the drawer: a
+     backdrop-filter on an ancestor would become its containing block and clip
+     it to the page. -->
+<app-edit-card (saved)="onCardSaved()" />

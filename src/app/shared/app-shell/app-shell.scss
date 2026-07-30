@@ -1,0 +1,152 @@
+// The signed-in chrome. Only what is unique to it — the canvas, the nav bar,
+// the drawer, the tab bar and the avatar are all global in
+// src/styles/_theme.scss.
+
+@use "../../../styles/mixins" as mixins;
+
+:host {
+  display: contents;
+}
+
+.shell {
+  // Clear of the fixed tab bar on phones, so the last row of a page is never
+  // stranded underneath it.
+  min-height: 100dvh;
+  padding-bottom: 5.5rem;
+
+  @media (min-width: 992px) {
+    padding-bottom: 0;
+  }
+}
+
+/// Capped so the search box doesn't stretch across a wide monitor, where a
+/// field the width of the screen looks like a mistake.
+.shell__search {
+  max-width: 26rem;
+}
+
+/// Sub-label beside the shop name in the app bar.
+.shell__meta {
+  font-size: 0.78rem;
+}
+
+/// A profile photo filling the avatar. object-fit: cover so any shape of photo
+/// fills the circle without being squashed.
+.shell__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// ── Account menu ─────────────────────────────────────────────────────────────
+// The avatar's dropdown on laptops. Below md the avatar is hidden and the same
+// destinations live in the drawer instead.
+
+/// A button that has to look like plain content, so it sheds the UA styling.
+.shell__account-btn {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--myc-radius-pill);
+
+  &:focus-visible {
+    outline: 2px solid var(--myc-violet-bright);
+    outline-offset: 3px;
+  }
+}
+
+.shell__chevron {
+  color: var(--myc-text-faint);
+  transition: transform 160ms ease;
+}
+
+.shell__chevron--up {
+  transform: rotate(180deg);
+}
+
+/// The panel. Right-aligned to the avatar, because it is at the right edge of
+/// the bar and a left-aligned panel would hang off the screen.
+.shell__menu {
+  @include mixins.glass(var(--myc-glass-bg-strong), var(--myc-radius-sm));
+
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 1040; // above the sticky app bar, below the drawer's backdrop
+  min-width: 12.5rem;
+  padding: 0.4rem;
+  animation: shell-menu-in 140ms ease;
+}
+
+.shell__menu-item {
+  padding: 0.55rem 0.7rem;
+  border-radius: calc(var(--myc-radius-sm) - 4px);
+  color: var(--myc-text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--myc-glass-bg);
+    color: var(--myc-text);
+  }
+}
+
+/// The page already being viewed.
+.shell__menu-item--on {
+  color: var(--myc-text);
+  background: var(--myc-glass-bg);
+}
+
+@keyframes shell-menu-in {
+  from {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell__chevron {
+    transition: none;
+  }
+
+  .shell__menu {
+    animation: none;
+  }
+}
+
+/// "Get app". Below sm it collapses to the icon alone — the bar is tight on a
+/// phone, and the download arrow is understood without the word.
+.shell__install {
+  flex-shrink: 0;
+
+  @media (max-width: 575.98px) {
+    padding-inline: 0.7rem;
+  }
+}
+
+/// Unread count on the bell.
+.shell__badge {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding-inline: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--myc-radius-pill);
+  background: var(--myc-red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}

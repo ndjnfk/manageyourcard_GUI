@@ -1,0 +1,63 @@
+<!-- Toasts, centred over the page.
+
+     The container covers the viewport but is pointer-events: none, so it
+     never swallows a click meant for the page underneath. Only the toasts
+     themselves take pointer events, so they can be dismissed.
+
+     aria-live rather than role="alert" on the container: the region is
+     announced when something is added to it, which is what a toast is. Errors
+     get assertive so they interrupt; the rest are polite. -->
+<div
+  class="toast-host"
+  [class.toast-host--on]="items().length > 0"
+  aria-live="polite"
+  aria-relevant="additions"
+>
+  @for (toast of items(); track toast.id) {
+    <div
+      class="toast-host__item toast-host__item--{{ toast.kind }}"
+      [attr.role]="toast.kind === 'error' ? 'alert' : 'status'"
+      [attr.aria-live]="toast.kind === 'error' ? 'assertive' : 'polite'"
+    >
+      <span class="toast-host__icon" aria-hidden="true">
+        @switch (toast.kind) {
+          @case ('success') {
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+          }
+          @case ('error') {
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 7.6v5M12 15.8v.2" />
+            </svg>
+          }
+          @case ('info') {
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 11.2v5M12 7.8v.2" />
+            </svg>
+          }
+        }
+      </span>
+
+      <span class="toast-host__body">
+        <span class="toast-host__message d-block">{{ toast.message }}</span>
+        @if (toast.detail) {
+          <span class="toast-host__detail d-block">{{ toast.detail }}</span>
+        }
+      </span>
+
+      <button
+        type="button"
+        class="toast-host__close"
+        aria-label="Dismiss"
+        (click)="dismiss(toast.id)"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+  }
+</div>

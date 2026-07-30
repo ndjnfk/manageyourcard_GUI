@@ -1,0 +1,222 @@
+<!-- Edit card.
+
+     Three things are editable: the customer's name, the notes, and whether the
+     card is closed. The card number, the dates and the mobile are shown as
+     context but not as inputs — a card number is the link to the plastic in
+     the customer's wallet, and moving a due date is a renewal rather than a
+     correction.
+
+     Same native <dialog> shell as the add form (.myc-dialog in
+     src/styles/_theme.scss): sheet on a phone, centred card from sm up, with
+     a fixed head and foot around a scrolling body. -->
+<dialog
+  #dialog
+  class="myc-dialog"
+  aria-labelledby="edit-card-title"
+  (close)="onClose()"
+  (click)="onBackdropClick($event)"
+>
+  @if (card(); as card) {
+    <form class="myc-dialog__panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- ── Header ───────────────────────────────────────────────────── -->
+      <header class="myc-dialog__head d-flex align-items-start justify-content-between gap-3">
+        <div class="min-w-0">
+          <p class="myc-eyebrow mb-1">Card {{ card.cardNumber }}</p>
+          <h2 class="myc-dialog__title m-0" id="edit-card-title">Edit this card</h2>
+        </div>
+
+        <button
+          type="button"
+          class="myc-icon-action flex-shrink-0"
+          aria-label="Close"
+          [disabled]="saving()"
+          (click)="close()"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Fields ───────────────────────────────────────────────────── -->
+      <div class="myc-dialog__body">
+        @if (formError(); as message) {
+          <div class="alert alert-danger d-flex align-items-start gap-2 mb-3" role="alert">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 7.8v4.6M12 15.8v.2" />
+            </svg>
+            <span>{{ message }}</span>
+          </div>
+        }
+
+        <div class="mb-3">
+          <label class="myc-label" for="edit-customerName">Customer name</label>
+          <input
+            id="edit-customerName"
+            class="myc-input"
+            [class.myc-input--invalid]="showError('customerName')"
+            formControlName="customerName"
+            type="text"
+            autocomplete="off"
+            maxlength="60"
+            enterkeyhint="next"
+            [attr.aria-invalid]="showError('customerName')"
+            aria-describedby="edit-customerName-msg"
+          />
+          @if (showError('customerName')) {
+            <p class="myc-dialog__msg text-danger mt-1 mb-0" id="edit-customerName-msg">
+              {{ errorFor('customerName') }}
+            </p>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="myc-label" for="edit-notes">
+            Notes <span class="fw-normal text-body-tertiary">(optional)</span>
+          </label>
+          <textarea
+            id="edit-notes"
+            class="myc-input edit-card__notes"
+            [class.myc-input--invalid]="showError('notes')"
+            formControlName="notes"
+            rows="2"
+            maxlength="200"
+            placeholder="What this card covers, model, IMEI — anything you'd write on it"
+          ></textarea>
+          @if (showError('notes')) {
+            <p class="myc-dialog__msg text-danger mt-1 mb-0">{{ errorFor('notes') }}</p>
+          }
+        </div>
+
+        <!-- ── Renew ─────────────────────────────────────────────────
+             Renewing is what the shop actually did for the customer, so it is
+             recorded rather than being a quiet edit of the due date: the card
+             is stamped as renewed and counted. Left blank, nothing is renewed
+             — opening this dialog to fix a spelling must not move a date. -->
+        <div class="edit-card__renew p-3 mb-3" [class.edit-card__renew--on]="renewing()">
+          <div class="d-flex align-items-baseline justify-content-between gap-2">
+            <p class="fw-semibold m-0">Renew this card</p>
+            @if (card.renewalCount) {
+              <span class="myc-dialog__msg text-body-tertiary text-end">
+                Renewed {{ card.renewalCount }}×
+                @if (card.renewedAt) {
+                  <span class="d-block">last on {{ card.renewedAt | date: 'd-MMM-y' }}</span>
+                }
+              </span>
+            }
+          </div>
+
+          <p class="myc-dialog__msg text-body-secondary mt-1 mb-3">
+            Currently due {{ card.dueDate }}. Pick a new date to renew it — the card stays in your
+            register with the new date, and gets marked as renewed.
+          </p>
+
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            @for (option of renewIn; track option.months) {
+              <button type="button" class="myc-chip" (click)="renewFor(option.months)">
+                +{{ option.label }}
+              </button>
+            }
+            @if (renewing()) {
+              <button type="button" class="myc-chip" (click)="clearRenewal()">Don't renew</button>
+            }
+          </div>
+
+          <label class="visually-hidden" for="edit-newDueDate">New due date</label>
+          <input
+            id="edit-newDueDate"
+            class="myc-input"
+            [class.myc-input--invalid]="showError('newDueDate')"
+            formControlName="newDueDate"
+            type="date"
+            [attr.min]="minNewDueDate()"
+            [attr.aria-invalid]="showError('newDueDate')"
+            aria-describedby="edit-newDueDate-msg"
+          />
+          <p class="myc-dialog__msg mt-1 mb-0" id="edit-newDueDate-msg">
+            @if (showError('newDueDate')) {
+              <span class="text-danger">{{ errorFor('newDueDate') }}</span>
+            } @else if (renewing()) {
+              <span class="text-body-secondary">Saving now will renew this card.</span>
+            } @else {
+              <span class="text-body-tertiary">Leave empty if you're not renewing.</span>
+            }
+          </p>
+        </div>
+
+        <!-- ── Completed / Closed ─────────────────────────────────────
+             The point of the whole dialog. A card the shopkeeper has finished
+             with should stop appearing in the register and the counts — it
+             moves to History instead. Reversible, because closing the wrong
+             card by mistake must not be a dead end. -->
+        <div class="edit-card__done p-3" [class.edit-card__done--on]="completed()">
+          <label class="myc-switch">
+            <input
+              id="edit-completed"
+              type="checkbox"
+              class="myc-switch__input"
+              formControlName="completed"
+              aria-describedby="edit-completed-msg"
+            />
+            <span class="myc-switch__track" aria-hidden="true"></span>
+            <span class="fw-semibold">Completed / Closed</span>
+          </label>
+
+          <p class="myc-dialog__msg text-body-secondary mt-2 mb-0" id="edit-completed-msg">
+            @if (completed()) {
+              This card is done. It won't be counted or chased any more — find it under History,
+              and turn this off to bring it back into your register.
+            } @else {
+              Work is done and there's nothing left to track? Turn this on and the card leaves
+              your register for History.
+            }
+          </p>
+        </div>
+
+        <!-- ── Context ────────────────────────────────────────────────
+             Read-only. Here so a correction is made against the right card,
+             not so it can be edited. -->
+        <dl class="edit-card__facts mt-3 mb-0">
+          <div class="d-flex justify-content-between gap-3 py-2">
+            <dt class="fw-medium text-body-secondary">Card number</dt>
+            <dd class="m-0 text-end">{{ card.cardNumber }}</dd>
+          </div>
+          <div class="d-flex justify-content-between gap-3 py-2">
+            <dt class="fw-medium text-body-secondary">Mobile</dt>
+            <dd class="m-0 text-end">{{ card.customerMobile }}</dd>
+          </div>
+          <div class="d-flex justify-content-between gap-3 py-2">
+            <dt class="fw-medium text-body-secondary">Issued</dt>
+            <dd class="m-0 text-end">{{ card.issueDate }}</dd>
+          </div>
+          <div class="d-flex justify-content-between gap-3 py-2">
+            <dt class="fw-medium text-body-secondary">Due</dt>
+            <dd class="m-0 text-end">{{ card.dueDate }}</dd>
+          </div>
+          @if (card.expiryDate) {
+            <div class="d-flex justify-content-between gap-3 py-2">
+              <dt class="fw-medium text-body-secondary">Expires</dt>
+              <dd class="m-0 text-end">{{ card.expiryDate }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      <!-- ── Actions ──────────────────────────────────────────────────── -->
+      <footer class="myc-dialog__foot d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+        <button type="button" class="myc-btn-ghost" [disabled]="saving()" (click)="close()">
+          Cancel
+        </button>
+        <button type="submit" class="myc-btn-primary" [disabled]="saving()" [attr.aria-busy]="saving()">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            Saving…
+          } @else {
+            Save changes
+          }
+        </button>
+      </footer>
+    </form>
+  }
+</dialog>

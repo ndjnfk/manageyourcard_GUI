@@ -1,0 +1,35 @@
+// Only what is unique to this page. The glass card, inputs, labels, the
+// password eye and the buttons are all global in src/styles/_theme.scss.
+
+:host {
+  display: block;
+}
+
+.login {
+  min-height: 100dvh;
+}
+
+/// Single readable column, narrower than the register form — two fields don't
+/// need the width five do.
+.login__col {
+  max-width: 27rem;
+}
+
+/// Field hints, errors and the "forgot password" link. Matches the size used
+/// under the register form's fields.
+.login__hint {
+  display: inline-block;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/// Rejected sign-in. Tinted rather than glass, so it reads as a state of the
+/// form and not as another panel floating on the page.
+.login__alert {
+  border: 1px solid rgba(255, 77, 109, 0.45);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(255, 77, 109, 0.1);
+  color: var(--myc-text);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}

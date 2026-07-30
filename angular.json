@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "ad1efbb9-0134-4b01-8d40-7467915ea37a"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -30,6 +31,8 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource/playfair-display/latin-700.css",
+              "node_modules/@fontsource/great-vibes/latin-400.css",
               "src/styles.scss"
             ]
           },
@@ -38,7 +41,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "750kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -47,7 +50,8 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json"
             },
             "development": {
               "optimization": false,

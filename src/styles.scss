@@ -1,1 +1,72 @@
-/* You can add global styles to this file, and also import other style files */
+/* Bootstrap, handed the project palette so its own components (buttons, forms,
+   modals, dropdowns) match the dark aurora-glass theme out of the box.
+   Token source of truth: src/styles/_theme.scss */
+@use "bootstrap/scss/bootstrap" with (
+  $primary: #7b2ff7,
+  $info: #35d6f0,
+  $success: #3dd9c0,
+  $warning: #f5a623,
+  $danger: #ff4d6d,
+  $body-bg: #0a0518,
+  $body-color: #ffffff,
+  // <html data-bs-theme="dark"> reads the *-dark variables, not the ones above,
+  // so map those onto the same tokens. This is what lets plain Bootstrap
+  // utilities (text-body-secondary, border, nav-link, text-success…) come out
+  // in theme colours instead of Bootstrap's default greys.
+  $body-bg-dark: #0a0518,
+  $body-color-dark: #ffffff,
+  $body-secondary-color-dark: rgba(255, 255, 255, 0.64),
+  $body-tertiary-color-dark: rgba(255, 255, 255, 0.38),
+  $body-emphasis-color-dark: #ffffff,
+  $border-color-dark: rgba(255, 255, 255, 0.12),
+  $nav-link-color: rgba(255, 255, 255, 0.64),
+  $nav-link-hover-color: #ffffff,
+  $border-radius: 20px,
+  $border-radius-sm: 12px,
+  $border-radius-lg: 28px,
+  $font-family-sans-serif: (
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji"
+  )
+);
+
+/* Project design tokens + .myc-* utilities. Must stay the only place this is
+   @use'd — see the note at the top of the file. */
+@use "styles/theme";
+
+html {
+  // Anchor links (#pricing, #how-it-works) shouldn't land under the fixed nav.
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--myc-nav-height);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--myc-bg);
+  color: var(--myc-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  // Sideways scroll is never wanted — the decorative glows overhang the layout.
+  overflow-x: hidden;
+}
+
+/* Keyboard focus stays visible on every dark surface. */
+:focus-visible {
+  outline: 2px solid var(--myc-violet-bright);
+  outline-offset: 2px;
+}

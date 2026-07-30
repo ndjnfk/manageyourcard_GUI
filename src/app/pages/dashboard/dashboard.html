@@ -1,0 +1,478 @@
+<!-- Signed-in dashboard: greeting + attention banner → six stat tiles →
+     register toolbar → card grid → renewals / overdue panels.
+
+     The app bar, mobile tab bar and drawer are not here — they are the shared
+     signed-in chrome, in src/app/shared/app-shell. This file is only what is
+     particular to the dashboard.
+
+     Same rules as the landing page: layout, spacing and type are Bootstrap
+     utilities, shared surfaces are the .myc-* classes from
+     src/styles/_theme.scss, and this component's stylesheet only holds what
+     exists nowhere else (the stat tiles, the due-date ring, the timeline rows). -->
+<app-shell [attentionCount]="needsAttention()" [addsCardHere]="true" (addCard)="openAddCard()">
+  <!-- Desktop search, dropped into the app bar. type=search gives Android/iOS
+       the right keyboard and a native clear button. -->
+  <label slot="search" class="myc-field d-flex align-items-center gap-2 w-100">
+    <span class="visually-hidden">Search cards</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+    <input
+      type="search"
+      class="myc-field__input"
+      placeholder="Search card no, customer or mobile"
+      autocomplete="off"
+      enterkeyhint="search"
+      [value]="query()"
+      (input)="onSearch($event)"
+    />
+  </label>
+
+    <!-- ── Greeting ─────────────────────────────────────────────────────── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+      <div>
+        <p class="myc-eyebrow mb-2">{{ shop().id }} · {{ shop().contact }}</p>
+        <h1 class="myc-title m-0">
+          {{ greeting }}, <span class="myc-title-accent">{{ shop().owner }}</span>
+        </h1>
+        <p class="mt-2 mb-0 text-body-secondary">
+          {{ today | date: 'EEEE, d MMMM y' }} · {{ shop().name }}
+        </p>
+      </div>
+      <!-- The drawer carries these too, but it is d-lg-none — without them
+           here there is no way to reach History above lg. -->
+      <div class="d-flex align-items-center gap-2">
+        <a class="myc-btn-ghost myc-btn-sm d-none d-sm-inline-flex" routerLink="/history">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m5 12.5 4.5 4.5L19 7.5" />
+          </svg>
+          History
+        </a>
+        <button type="button" class="myc-btn-primary d-none d-sm-inline-flex" (click)="openAddCard()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Add new card
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Attention banner ─────────────────────────────────────────────
+         Only shown when there is something to do, so it never becomes
+         wallpaper the shopkeeper stops reading. -->
+    @if (needsAttention()) {
+      <div class="myc-glass dash-alert d-flex flex-wrap align-items-center gap-3 mt-4 p-3 p-md-4">
+        <span class="myc-icon-tile dash-alert__icon d-inline-flex align-items-center justify-content-center rounded-3" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M12 8.5v4.5M12 16.2v.2" />
+            <path d="M10.3 4.2 2.9 17.3A2 2 0 0 0 4.6 20.3h14.8a2 2 0 0 0 1.7-3l-7.4-13.1a2 2 0 0 0-3.4 0z" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <p class="m-0 flex-grow-1 lh-base">
+          <span class="fw-semibold d-block">{{ needsAttention() }} cards need you today</span>
+          <span class="text-body-secondary small">
+            Cards due today and anything already overdue — clear these before the shop closes.
+          </span>
+        </p>
+        <button type="button" class="myc-btn-ghost myc-btn-sm" (click)="setFilter('today')">
+          Show them
+        </button>
+      </div>
+    }
+
+    <!-- ── Stat tiles ───────────────────────────────────────────────────
+         Two up on a phone, three on a tablet, all six in a row on a laptop.
+         Each one is a filter: tapping "Expired" filters the register below,
+         which is the fastest route from "17 expired" to doing something. -->
+    <section class="mt-4" aria-label="Card summary">
+      <div class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-3">
+        @for (stat of stats(); track stat.key) {
+          <div class="col">
+            @if (stat.filter) {
+              <button
+                type="button"
+                class="myc-glass stat h-100 w-100 p-3 p-lg-4 text-start"
+                [class.stat--on]="filter() === stat.filter"
+                [attr.aria-pressed]="filter() === stat.filter"
+                (click)="setFilter(stat.filter)"
+              >
+                <ng-container [ngTemplateOutlet]="tile" [ngTemplateOutletContext]="{ $implicit: stat }" />
+              </button>
+            } @else {
+              <div class="myc-glass stat h-100 w-100 p-3 p-lg-4">
+                <ng-container [ngTemplateOutlet]="tile" [ngTemplateOutletContext]="{ $implicit: stat }" />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- ── Register ─────────────────────────────────────────────────────── -->
+    <section class="mt-5" aria-label="Card register">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <h2 class="fs-4 fw-semibold m-0">Your cards</h2>
+        <span class="small text-body-tertiary">
+          Showing {{ shownCards().length }} of {{ visibleCards().length }}
+        </span>
+      </div>
+
+      <!-- Phone search. Separate field rather than moving the app bar one, so
+           neither has to be reparented as the viewport changes. -->
+      <label class="myc-field d-flex d-lg-none align-items-center gap-2 mb-3">
+        <span class="visually-hidden">Search cards</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" />
+          <path d="m16 16 4.5 4.5" />
+        </svg>
+        <input
+          type="search"
+          class="myc-field__input"
+          placeholder="Card no, customer or mobile"
+          autocomplete="off"
+          enterkeyhint="search"
+          [value]="query()"
+          (input)="onSearch($event)"
+        />
+      </label>
+
+      <!-- Chips scroll sideways on a phone rather than wrapping to three rows. -->
+      <div class="myc-chip-rail d-flex gap-2 mb-3" role="group" aria-label="Filter cards">
+        @for (chip of filters; track chip.key) {
+          <button
+            type="button"
+            class="myc-chip"
+            [class.myc-chip--on]="filter() === chip.key"
+            [attr.aria-pressed]="filter() === chip.key"
+            (click)="setFilter(chip.key)"
+          >
+            {{ chip.label }}
+          </button>
+        }
+      </div>
+
+      @if (loading()) {
+        <!-- The register is being fetched. A plain line rather than skeleton
+             cards: the count isn't known yet, so any number of placeholders
+             would be a guess, and a wrong one reads as cards that vanished. -->
+        <div class="myc-glass text-center p-4 p-lg-5" role="status">
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          Loading your register…
+        </div>
+      } @else if (loadError(); as message) {
+        <div class="myc-glass text-center p-4 p-lg-5">
+          <p class="fs-5 fw-semibold m-0">Could not load your cards</p>
+          <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">{{ message }}</p>
+          <button type="button" class="myc-btn-ghost" (click)="loadCards()">Try again</button>
+        </div>
+      } @else if (!cards().length) {
+        <!-- An empty register is not a failed search: there is nothing to
+             clear, and the only useful thing to offer is the first card. -->
+        <div class="myc-glass myc-glow-panel text-center p-4 p-lg-5">
+          <span
+            class="myc-icon-tile d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+            aria-hidden="true"
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" />
+              <path d="M2.5 10h19" />
+            </svg>
+          </span>
+          <p class="fs-5 fw-semibold m-0">Your register is empty</p>
+          <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">
+            Add the first card and manageyourcard will keep track of when it falls due — no card
+            numbers, no payments, just the renewal dates you already write down.
+          </p>
+          <button type="button" class="myc-btn-primary" (click)="openAddCard()">
+            Add your first card
+          </button>
+        </div>
+      } @else if (visibleCards().length) {
+        <div class="row g-3">
+          @for (card of shownCards(); track card.cardId) {
+            <div class="col-12 col-md-6 col-xl-4">
+              <article class="myc-glass card-tile h-100 p-3 p-lg-4" [class.card-tile--alert]="card.state === 'expired'">
+                <!-- Head: who the card belongs to, and where it stands. -->
+                <div class="d-flex align-items-start gap-3">
+                  <span
+                    class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center small fw-semibold"
+                    aria-hidden="true"
+                  >
+                    {{ card.initials }}
+                  </span>
+                  <div class="flex-grow-1 min-w-0">
+                    <h3 class="fs-6 fw-semibold mb-1 text-truncate">{{ card.customer }}</h3>
+                    <!-- Renewed cards say so under the name, with when it last
+                         happened. A card that has been renewed is a customer
+                         who came back, and the date is what makes that useful
+                         rather than merely true. -->
+                    @if (card.renewalCount) {
+                      <p class="card-tile__renewed d-inline-flex align-items-center gap-1 mb-1">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M20 11.5a8 8 0 1 1-2.4-5.2" />
+                          <path d="M20 4v4.5h-4.5" />
+                        </svg>
+                        @if (card.renewalCount > 1) {
+                          Renewed {{ card.renewalCount }}×
+                        } @else {
+                          Renewed
+                        }
+                        @if (card.renewedOn) {
+                          on {{ card.renewedOn | date: 'd-MMM-y' }}
+                        }
+                      </p>
+                    }
+                    <!-- The card number, plus whatever the shopkeeper noted
+                         about it — that is where what the card covers lives
+                         now that the schema has no separate field for it. -->
+                    <p class="m-0 dash-meta text-body-tertiary text-truncate">
+                      {{ card.cardNumber }}@if (card.notes) { · {{ card.notes }} }
+                    </p>
+                  </div>
+                  <span class="badge rounded-pill flex-shrink-0" [class]="card.meta.badge">
+                    {{ card.meta.label }}
+                  </span>
+                </div>
+
+                <!-- Body: the due date, and how much of the cycle is gone.
+                     The ring is a conic gradient — no chart library. -->
+                <div class="d-flex align-items-center gap-3 mt-3 pt-3 border-top">
+                  <span
+                    class="ring flex-shrink-0"
+                    [class]="card.meta.tone"
+                    [style.--ring]="card.progress + '%'"
+                    aria-hidden="true"
+                  >
+                    <span class="ring__value">{{ card.progress }}<small>%</small></span>
+                  </span>
+                  <div class="min-w-0">
+                    <p class="m-0 fw-semibold" [class]="card.meta.tone">{{ card.relative }}</p>
+                    <p class="m-0 dash-meta text-body-secondary">
+                      Due {{ card.due | date: 'd MMM y' }}
+                    </p>
+                    <p class="m-0 dash-meta text-body-tertiary">
+                      Issued {{ card.issued | date: 'd MMM y' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Actions. tel: is the point of storing the mobile number —
+                     on a phone this dials, which is the whole job.
+
+                     Edit is where a card gets closed once the work is done, so
+                     it sits with the other per-card actions rather than being
+                     hidden behind a menu. -->
+                <div class="d-flex gap-2 mt-3">
+                  <a class="myc-btn-ghost myc-btn-sm flex-grow-1" [href]="'tel:' + card.mobile">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M6.6 3.5h3l1.5 3.8-2 1.3a11 11 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" />
+                    </svg>
+                    Call
+                  </a>
+                  <!-- Renewing lives inside Edit now, alongside the other
+                       things that change what a card is. -->
+                  <button
+                    type="button"
+                    class="myc-btn-primary myc-btn-sm flex-grow-1"
+                    [attr.aria-label]="'Edit card ' + card.cardNumber + ' for ' + card.customer"
+                    (click)="openEditCard(card.cardId)"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
+                      <path d="M14.5 6.5 17.5 9.5" />
+                    </svg>
+                    Edit
+                  </button>
+                </div>
+              </article>
+            </div>
+          }
+        </div>
+
+        <!-- The register opens on two rows; the rest is one tap away. Nothing
+             is fetched here — every card is already loaded, so this only
+             decides how much is on screen. -->
+        @if (moreCards() || showAllCards()) {
+          <div class="text-center mt-4">
+            <button
+              type="button"
+              class="myc-btn-ghost"
+              (click)="showAllCards.set(!showAllCards())"
+            >
+              @if (showAllCards()) {
+                Show less
+              } @else {
+                Show {{ moreCards() }} more
+              }
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="myc-glass myc-glow-panel text-center p-4 p-lg-5">
+          <p class="fs-5 fw-semibold m-0">No cards match that</p>
+          <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">
+            Try a different card number or mobile number, or clear the filter to see the whole
+            register again.
+          </p>
+          <button type="button" class="myc-btn-ghost" (click)="clearSearch(); setFilter('all')">
+            Show all cards
+          </button>
+        </div>
+      }
+    </section>
+
+    <!-- ── Renewals + overdue ───────────────────────────────────────────
+         Side by side on a laptop, stacked on a phone. Both are read-only
+         summaries — acting on a card happens in the register above. -->
+    <section class="row g-3 g-lg-4 mt-4" aria-label="Renewals and overdue cards">
+      <div class="col-12 col-lg-7">
+        <div class="myc-glass h-100 p-3 p-lg-4">
+          <div class="d-flex justify-content-between align-items-baseline gap-2 mb-3">
+            <h2 class="fs-5 fw-semibold m-0">Upcoming renewals</h2>
+            <span class="small text-body-tertiary">Next 30 days</span>
+          </div>
+
+          @for (card of upcoming(); track card.cardId) {
+            <div class="d-flex align-items-center gap-3 py-2 timeline-row">
+              <span class="timeline-row__day text-center flex-shrink-0" [class]="card.meta.tone">
+                <span class="d-block fw-bold lh-1">{{ card.due | date: 'd' }}</span>
+                <span class="d-block dash-meta text-uppercase">{{ card.due | date: 'MMM' }}</span>
+              </span>
+              <span class="flex-grow-1 min-w-0">
+                <span class="d-block fw-medium text-truncate">{{ card.customer }}</span>
+                <span class="d-block dash-meta text-body-tertiary">
+                  {{ card.cardNumber }}
+                </span>
+              </span>
+              <span class="small flex-shrink-0" [class]="card.meta.tone">{{ card.relative }}</span>
+            </div>
+          } @empty {
+            <p class="m-0 text-body-secondary">Nothing falls due in the next 30 days.</p>
+          }
+
+          @if (moreUpcoming() || showAllUpcoming()) {
+            <button
+              type="button"
+              class="myc-btn-ghost myc-btn-sm w-100 mt-3"
+              (click)="showAllUpcoming.set(!showAllUpcoming())"
+            >
+              @if (showAllUpcoming()) {
+                Show less
+              } @else {
+                Show {{ moreUpcoming() }} more
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-5">
+        <div class="myc-glass h-100 p-3 p-lg-4">
+          <div class="d-flex justify-content-between align-items-baseline gap-2 mb-3">
+            <h2 class="fs-5 fw-semibold m-0">Needs attention</h2>
+            <span class="small text-danger">{{ allOverdue().length }} overdue</span>
+          </div>
+
+          @for (card of overdue(); track card.cardId) {
+            <div class="d-flex align-items-center gap-3 py-2 timeline-row">
+              <i class="myc-dot text-danger" aria-hidden="true"></i>
+              <span class="flex-grow-1 min-w-0">
+                <span class="d-block fw-medium text-truncate">{{ card.customer }}</span>
+                <span class="d-block dash-meta text-body-tertiary">
+                  {{ card.cardNumber }} · due {{ card.due | date: 'd MMM' }}
+                </span>
+              </span>
+              <span class="small text-danger flex-shrink-0">{{ card.relative }}</span>
+            </div>
+          } @empty {
+            <p class="m-0 text-body-secondary">Nothing is overdue. The register is clear.</p>
+          }
+
+          @if (moreOverdue() || showAllOverdue()) {
+            <button
+              type="button"
+              class="myc-btn-ghost myc-btn-sm w-100 mt-3"
+              (click)="showAllOverdue.set(!showAllOverdue())"
+            >
+              @if (showAllOverdue()) {
+                Show less
+              } @else {
+                Show {{ moreOverdue() }} more
+              }
+            </button>
+          }
+
+          <p class="small mt-3 mb-0 text-body-tertiary">
+            Only cards issued under {{ shop().id }} are ever loaded here.
+          </p>
+        </div>
+      </div>
+    </section>
+</app-shell>
+
+<!-- ── Dialogs ─────────────────────────────────────────────────────────────
+     Native <dialog> elements, always in the DOM. Kept outside the shell for
+     the same reason as the drawer: a backdrop-filter on an ancestor would
+     become their containing block and clip them to the page. -->
+<app-add-card (created)="onCardCreated($event)" />
+<app-edit-card (saved)="onCardSaved($event)" />
+
+<!-- ── Templates ────────────────────────────────────────────────────────────
+     A stat tile renders the same whether it is a filter button or a plain
+     panel, so the markup lives here once rather than being duplicated in both
+     branches above. -->
+<ng-template #tile let-stat>
+  <span
+    class="stat__icon myc-icon-tile d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+    [class]="stat.tone"
+    aria-hidden="true"
+  >
+    <ng-container [ngTemplateOutlet]="icon" [ngTemplateOutletContext]="{ $implicit: stat.icon }" />
+  </span>
+  <span class="stat__value d-block fw-semibold lh-1" [class]="stat.tone">{{ stat.value }}</span>
+  <span class="d-block fw-medium mt-2">{{ stat.label }}</span>
+  <span class="d-block dash-meta text-body-tertiary mt-1">{{ stat.hint }}</span>
+</ng-template>
+
+<!-- One icon template, switched by name, so every tile draws from the same
+     path data rather than repeating it per tile. -->
+<ng-template #icon let-name>
+  @switch (name) {
+    @case ('cards') {
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" />
+        <path d="M2.5 10h19" stroke-linecap="round" />
+      </svg>
+    }
+    @case ('check') {
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m5 12.5 4.5 4.5L19 7.5" />
+      </svg>
+    }
+    @case ('today') {
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="4.5" width="17" height="16" rx="2.5" />
+        <path d="M3.5 9.5h17M8 3v3M16 3v3" stroke-linecap="round" />
+      </svg>
+    }
+    @case ('week') {
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 1.8" />
+      </svg>
+    }
+    @case ('alert') {
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 8.5v4.5M12 16.2v.2" />
+        <path d="M10.3 4.2 2.9 17.3A2 2 0 0 0 4.6 20.3h14.8a2 2 0 0 0 1.7-3l-7.4-13.1a2 2 0 0 0-3.4 0z" />
+      </svg>
+    }
+    @case ('renew') {
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 11.5a8 8 0 1 1-2.4-5.2" />
+        <path d="M20 4v4.5h-4.5" />
+      </svg>
+    }
+  }
+</ng-template>

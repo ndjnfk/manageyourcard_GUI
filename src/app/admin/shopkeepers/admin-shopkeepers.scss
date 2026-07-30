@@ -1,0 +1,162 @@
+// The shops table. Only what is unique to it — the glass panel, the chips, the
+// dialog shell and the inputs are all global in src/styles/_theme.scss.
+
+:host {
+  display: block;
+}
+
+.admin-shops__search {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.admin-shops__panel {
+  overflow: hidden;
+}
+
+.admin-shops__table {
+  border-collapse: collapse;
+
+  th {
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--myc-text-faint);
+    border-bottom: 1px solid var(--myc-glass-border);
+  }
+
+  td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+  }
+}
+
+.admin-shops__id {
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Segoe UI Mono", Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--myc-text-faint);
+}
+
+.admin-shops__meta {
+  font-size: 0.78rem;
+}
+
+/// Below lg the table becomes stacked cards. Six columns on a 360px screen is
+/// unreadable however it is squeezed, so the layout changes rather than
+/// shrinking — each cell gets its header back as a label.
+@media (max-width: 991.98px) {
+  .admin-shops__table,
+  .admin-shops__table tbody,
+  .admin-shops__row,
+  .admin-shops__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-shops__row {
+    padding: 0.5rem 0;
+  }
+
+  .admin-shops__row + .admin-shops__row {
+    border-top: 1px solid var(--myc-glass-border);
+  }
+
+  .admin-shops__table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 1rem;
+    text-align: right;
+  }
+
+  .admin-shops__table td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--myc-text-faint);
+    text-align: left;
+  }
+}
+
+@media (min-width: 992px) {
+  .admin-shops__row + .admin-shops__row td {
+    border-top: 1px solid var(--myc-glass-border);
+  }
+}
+
+.admin-shops__page {
+  min-width: 2.5rem;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Delete ───────────────────────────────────────────────────────────────────
+// Outlined rather than filled: it sits beside Edit and Cards, and a solid red
+// button in a row of them draws the eye to the one action nobody should reach
+// for by accident.
+
+.admin-shops__delete {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 77, 109, 0.45);
+  border-radius: var(--myc-radius-pill);
+  background: none;
+  color: var(--myc-red);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 77, 109, 0.14);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--myc-red);
+    outline-offset: 2px;
+  }
+}
+
+/// The confirm button inside the dialog. Filled, because by then the choice
+/// has already been made — and the ID has been typed to prove it.
+.admin-shops__delete-go {
+  appearance: none;
+  padding: 0.7rem 1.4rem;
+  border: 0;
+  border-radius: var(--myc-radius-pill);
+  background: var(--myc-red);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+}
+
+.admin-shops__danger {
+  border: 1px solid rgba(255, 77, 109, 0.45);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(255, 77, 109, 0.12);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.admin-shops__note {
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(61, 217, 192, 0.4);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(61, 217, 192, 0.12);
+  font-size: 0.85rem;
+}

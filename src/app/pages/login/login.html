@@ -1,0 +1,177 @@
+<!-- Sign in. Same shell as the register page: one centred glass card on the
+     aurora canvas, Bootstrap utilities for layout, .myc-* theme classes for
+     the surfaces, inputs and buttons.
+
+     Only two fields, so the markup is written out rather than driven from a
+     config array the way register's five are. -->
+<div class="myc-canvas login d-flex flex-column">
+  <a class="myc-skip-link position-absolute px-3 py-2 rounded-3 text-decoration-none" href="#main">
+    Skip to content
+  </a>
+
+  <header class="myc-nav myc-safe-top border-bottom">
+    <div class="container d-flex align-items-center justify-content-between gap-3">
+      <a class="d-inline-flex align-items-center text-decoration-none text-body" routerLink="/">
+        <app-logo />
+      </a>
+      <a class="myc-btn-ghost myc-btn-sm shadow-none" routerLink="/register">Register</a>
+    </div>
+  </header>
+
+  <!-- d-flex + m-auto on the child is what centres the card in whatever space
+       the header leaves. Deliberately margin-auto rather than
+       align-items:center: when the form is taller than the viewport — a small
+       phone with both errors showing — margin-auto simply stops centring,
+       where align-items:center would push the top of the card out of reach. -->
+  <main id="main" class="container flex-grow-1 d-flex py-4 py-lg-5">
+    <div class="login__col w-100 m-auto">
+      <div class="myc-glass p-4 p-lg-5">
+        <header class="mb-4">
+          <p class="myc-eyebrow mb-2">Welcome back</p>
+          <h1 class="myc-title m-0">
+            Sign in to your <span class="myc-title-accent">shop</span>
+          </h1>
+          <p class="mt-3 mb-0 text-body-secondary lh-base">
+            Your register, your due dates, exactly as you left them.
+          </p>
+        </header>
+
+        <!-- novalidate: the browser's own bubbles are unstyled and appear one
+             at a time, so validation is left to the messages under each
+             field. -->
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <!-- Rejected sign-in. role=alert so a screen reader announces it
+               without the user having to go looking for what changed. -->
+          @if (failed()) {
+            <p class="login__alert d-flex align-items-start gap-2 mb-3 p-3" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.8v4.6M12 15.8v.2" />
+              </svg>
+              <span>
+                That email and password don’t match a shop. Check both and try again.
+              </span>
+            </p>
+          }
+
+          <!-- Not a rejected sign-in but a failed one: the API is unreachable,
+               or broke. Checking what they typed would not help, so it is
+               worded and styled apart from the message above. -->
+          @if (error(); as message) {
+            <div class="alert alert-danger d-flex align-items-start gap-2 mb-3" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.8v4.6M12 15.8v.2" />
+              </svg>
+              <span>{{ message }}</span>
+            </div>
+          }
+
+          <div class="mb-3">
+            <label class="myc-label" for="email">Email address</label>
+            <input
+              id="email"
+              class="myc-input"
+              [class.myc-input--invalid]="showError('email')"
+              formControlName="email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              maxlength="120"
+              enterkeyhint="next"
+              aria-describedby="email-error"
+              [attr.aria-invalid]="showError('email')"
+            />
+            @if (showError('email')) {
+              <p class="login__hint text-danger mt-1 mb-0" id="email-error">
+                {{ errorFor('email') }}
+              </p>
+            }
+          </div>
+
+          <div class="mb-2">
+            <label class="myc-label" for="password">Password</label>
+
+            <div class="myc-pw">
+              <input
+                id="password"
+                class="myc-input myc-pw__input"
+                [class.myc-input--invalid]="showError('password')"
+                formControlName="password"
+                [type]="passwordShown() ? 'text' : 'password'"
+                autocomplete="current-password"
+                placeholder="Your password"
+                maxlength="64"
+                enterkeyhint="go"
+                aria-describedby="password-error"
+                [attr.aria-invalid]="showError('password')"
+              />
+
+              <button
+                type="button"
+                class="myc-pw__toggle"
+                [attr.aria-label]="passwordShown() ? 'Hide password' : 'Show password'"
+                [attr.aria-pressed]="passwordShown()"
+                aria-controls="password"
+                (click)="togglePassword()"
+              >
+                @if (passwordShown()) {
+                  <!-- Eye with a stroke through it — the password is visible,
+                       tapping hides it again. -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9.9 5.1A9.6 9.6 0 0 1 12 4.9c5 0 8.4 4 9.4 5.6.3.4.3 1 0 1.5a16 16 0 0 1-2.8 3.2" />
+                    <path d="M6.4 6.7A15.7 15.7 0 0 0 2.6 11a1.4 1.4 0 0 0 0 1.5c1 1.6 4.4 5.6 9.4 5.6a9.9 9.9 0 0 0 4.2-.9" />
+                    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                    <path d="m3.5 3.5 17 17" />
+                  </svg>
+                } @else {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2.6 11.3c1-1.6 4.4-5.6 9.4-5.6s8.4 4 9.4 5.6c.3.4.3 1 0 1.4-1 1.6-4.4 5.6-9.4 5.6s-8.4-4-9.4-5.6a1.4 1.4 0 0 1 0-1.4z" />
+                    <circle cx="12" cy="12" r="2.8" />
+                  </svg>
+                }
+              </button>
+            </div>
+
+            @if (showError('password')) {
+              <p class="login__hint text-danger mt-1 mb-0" id="password-error">
+                {{ errorFor('password') }}
+              </p>
+            }
+          </div>
+
+          <div class="text-end mb-4">
+            <a class="login__hint text-body-secondary" href="#">Forgot password?</a>
+          </div>
+
+          <!-- Disabled while the request is in flight: a second submit would
+               open a second session, and sessions do not expire on their own. -->
+          <button
+            type="submit"
+            class="myc-btn-primary w-100"
+            [disabled]="submitting()"
+            [attr.aria-busy]="submitting()"
+          >
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              Signing in…
+            } @else {
+              Sign in
+            }
+          </button>
+
+          <p class="small text-center text-body-tertiary mt-3 mb-0">
+            New here?
+            <a class="text-body-secondary" routerLink="/register">Register your shop</a>
+          </p>
+        </form>
+      </div>
+
+      <p class="small text-center text-body-tertiary mt-3 mb-0">
+        manageyourcard never asks for card numbers, payments or money — only the renewal dates you
+        already keep.
+      </p>
+    </div>
+  </main>
+</div>

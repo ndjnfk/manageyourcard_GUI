@@ -1,0 +1,57 @@
+// =============================================================================
+// manageyourcard — theme mixins
+// -----------------------------------------------------------------------------
+// This file emits NO CSS on its own, so components can safely @use it without
+// duplicating the token block. Colours come from the CSS custom properties
+// declared in _theme.scss, which are global and inherit through component
+// boundaries.
+//
+//   @use "../../../styles/mixins" as mixins;
+//   .balance-card { @include mixins.glass; }
+// =============================================================================
+
+/// Frosted card. Pass a stronger fill for surfaces that need more separation.
+@mixin glass($fill: var(--myc-glass-bg), $radius: var(--myc-radius)) {
+  border: 1px solid var(--myc-glass-border);
+  border-radius: $radius;
+  box-shadow: var(--myc-glass-shadow);
+  // Progressive enhancement: without backdrop-filter the fill above is far too
+  // transparent to read, so opaque-up rather than ship unreadable text.
+  background: rgba(20, 11, 46, 0.92);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background: $fill;
+    -webkit-backdrop-filter: blur(var(--myc-glass-blur));
+    backdrop-filter: blur(var(--myc-glass-blur));
+  }
+}
+
+/// Lit neon edge — for the selected/active/featured surface in a group.
+@mixin glass-lit {
+  border-color: var(--myc-glass-border-lit);
+  box-shadow:
+    var(--myc-glass-shadow),
+    0 0 0 1px rgba(168, 85, 247, 0.25),
+    var(--myc-glow-violet);
+}
+
+/// Gradient-filled text (balance figures, big percentages, headline accents).
+@mixin gradient-text($gradient: var(--myc-gradient-text)) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/// The ambient purple bloom behind everything. Put this on a page shell.
+/// Two off-centre radial glows over the flat canvas — that's the whole trick.
+/// Deliberately not `background-attachment: fixed`: it repaints badly on iOS.
+/// For long pages, add extra section-level glows instead.
+@mixin aurora-canvas {
+  background-color: var(--myc-bg);
+  background-image:
+    radial-gradient(60rem 40rem at 15% 0%, rgba(123, 47, 247, 0.35) 0%, transparent 60%),
+    radial-gradient(45rem 35rem at 95% 12%, rgba(193, 58, 245, 0.28) 0%, transparent 60%);
+  background-repeat: no-repeat;
+  color: var(--myc-text);
+}

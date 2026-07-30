@@ -1,0 +1,17 @@
+// Admin dashboard. Only what is unique to it.
+
+:host {
+  display: block;
+}
+
+.admin-stat__value {
+  // Four tiles fit two-up on a phone and four across on a laptop; the number
+  // stays the largest thing on the tile at both.
+  font-size: clamp(1.6rem, 6vw, 2.25rem);
+  min-height: 1em;
+}
+
+.admin-stat__hint {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}

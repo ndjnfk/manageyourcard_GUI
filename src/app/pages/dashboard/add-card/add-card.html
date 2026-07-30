@@ -1,0 +1,214 @@
+<!-- Add new card.
+
+     The fields are the Cards schema minus everything the shopkeeper does not
+     supply: the CardID and the card number are both assigned when the card is
+     created, the ShopkeeperID comes from the session, and the Status is
+     derived from the dates. The card number is deliberately not asked for —
+     a number typed at a busy counter is the thing that gets repeated.
+
+     A native <dialog>: the browser supplies focus trapping, Escape to close,
+     inertness of the page behind and the ::backdrop, so none of that is
+     re-implemented here. The element is always in the DOM and is opened with
+     showModal(); the form is reset on open, so it never reappears holding the
+     last customer's details.
+
+     Centred in the viewport at every size (.myc-dialog in
+     src/styles/_theme.scss). The header and the footer stay put while the
+     fields scroll, because on a short screen the Save button would otherwise
+     be somewhere below the fold. -->
+<dialog
+  #dialog
+  class="myc-dialog"
+  aria-labelledby="card-dialog-title"
+  (close)="onClose()"
+  (click)="onBackdropClick($event)"
+>
+  <form class="myc-dialog__panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <header class="myc-dialog__head d-flex align-items-start justify-content-between gap-3">
+      <div>
+        <p class="myc-eyebrow mb-1">New card</p>
+        <h2 class="myc-dialog__title m-0" id="card-dialog-title">Add a card to your register</h2>
+      </div>
+
+      <button
+        type="button"
+        class="myc-icon-action flex-shrink-0"
+        aria-label="Close"
+        [disabled]="saving()"
+        (click)="close()"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- ── Fields ─────────────────────────────────────────────────────── -->
+    <div class="myc-dialog__body">
+      @if (formError(); as message) {
+        <div class="alert alert-danger d-flex align-items-start gap-2 mb-3" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.8v4.6M12 15.8v.2" />
+          </svg>
+          <span>{{ message }}</span>
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="myc-label" for="card-customerName">Customer name</label>
+        <input
+          id="card-customerName"
+          class="myc-input"
+          [class.myc-input--invalid]="showError('customerName')"
+          formControlName="customerName"
+          type="text"
+          autocomplete="off"
+          placeholder="Rahul Deshmukh"
+          maxlength="60"
+          enterkeyhint="next"
+          [attr.aria-invalid]="showError('customerName')"
+          aria-describedby="card-customerName-msg"
+        />
+        @if (showError('customerName')) {
+          <p class="myc-dialog__msg text-danger mt-1 mb-0" id="card-customerName-msg">
+            {{ errorFor('customerName') }}
+          </p>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label class="myc-label" for="card-customerMobile">Customer mobile</label>
+        <input
+          id="card-customerMobile"
+          class="myc-input"
+          [class.myc-input--invalid]="showError('customerMobile')"
+          formControlName="customerMobile"
+          type="tel"
+          inputmode="tel"
+          autocomplete="off"
+          placeholder="+91 94XXX XXXXX"
+          maxlength="17"
+          enterkeyhint="next"
+          [attr.aria-invalid]="showError('customerMobile')"
+          aria-describedby="card-customerMobile-msg"
+        />
+        <p class="myc-dialog__msg mt-1 mb-0" id="card-customerMobile-msg">
+          @if (showError('customerMobile')) {
+            <span class="text-danger">{{ errorFor('customerMobile') }}</span>
+          } @else {
+            <span class="text-body-tertiary">Where the renewal reminder will go.</span>
+          }
+        </p>
+      </div>
+
+      <!-- Side by side once there is room; stacked on a phone, where two date
+           inputs on one row leaves neither wide enough to read. -->
+      <div class="row g-3">
+        <div class="col-12 col-sm-6">
+          <label class="myc-label" for="card-issueDate">Issue date</label>
+          <!-- max=today: a card is issued when the customer is at the counter,
+               so the browser's own picker should not even offer a future date.
+               Mistyping the year is otherwise invisible — the card just reads
+               as having a year to run when it does not. -->
+          <input
+            id="card-issueDate"
+            class="myc-input"
+            [class.myc-input--invalid]="showError('issueDate')"
+            formControlName="issueDate"
+            type="date"
+            [attr.max]="maxIssueDate()"
+            [attr.aria-invalid]="showError('issueDate')"
+            aria-describedby="card-issueDate-msg"
+          />
+          <p class="myc-dialog__msg mt-1 mb-0" id="card-issueDate-msg">
+            @if (showError('issueDate')) {
+              <span class="text-danger">{{ errorFor('issueDate') }}</span>
+            } @else {
+              <span class="text-body-tertiary">Today, or when you actually issued it.</span>
+            }
+          </p>
+        </div>
+
+        <div class="col-12 col-sm-6">
+          <label class="myc-label" for="card-dueDate">Due date</label>
+          <input
+            id="card-dueDate"
+            class="myc-input"
+            [class.myc-input--invalid]="showError('dueDate')"
+            formControlName="dueDate"
+            type="date"
+            [attr.min]="minLaterDate()"
+            [attr.aria-invalid]="showError('dueDate')"
+            aria-describedby="card-dueDate-msg"
+          />
+          <p class="myc-dialog__msg mt-1 mb-0" id="card-dueDate-msg">
+            @if (showError('dueDate')) {
+              <span class="text-danger">{{ errorFor('dueDate') }}</span>
+            } @else {
+              <span class="text-body-tertiary">The next renewal or service date.</span>
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-3 mb-3">
+        <label class="myc-label" for="card-expiryDate">
+          Expiry date <span class="fw-normal text-body-tertiary">(optional)</span>
+        </label>
+        <input
+          id="card-expiryDate"
+          class="myc-input"
+          [class.myc-input--invalid]="showError('expiryDate')"
+          formControlName="expiryDate"
+          type="date"
+          [attr.min]="minLaterDate()"
+          [attr.aria-invalid]="showError('expiryDate')"
+          aria-describedby="card-expiryDate-msg"
+        />
+        <p class="myc-dialog__msg mt-1 mb-0" id="card-expiryDate-msg">
+          @if (showError('expiryDate')) {
+            <span class="text-danger">{{ errorFor('expiryDate') }}</span>
+          } @else {
+            <span class="text-body-tertiary">
+              When the card itself stops being valid. Leave empty if it doesn't expire.
+            </span>
+          }
+        </p>
+      </div>
+
+      <div>
+        <label class="myc-label" for="card-notes">
+          Notes <span class="fw-normal text-body-tertiary">(optional)</span>
+        </label>
+        <textarea
+          id="card-notes"
+          class="myc-input card-dialog__notes"
+          formControlName="notes"
+          rows="2"
+          maxlength="200"
+          placeholder="What this card covers, model, IMEI — anything you'd write on it"
+        ></textarea>
+        @if (showError('notes')) {
+          <p class="myc-dialog__msg text-danger mt-1 mb-0">{{ errorFor('notes') }}</p>
+        }
+      </div>
+    </div>
+
+    <!-- ── Actions ────────────────────────────────────────────────────── -->
+    <footer class="myc-dialog__foot d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+      <button type="button" class="myc-btn-ghost" [disabled]="saving()" (click)="close()">
+        Cancel
+      </button>
+      <button type="submit" class="myc-btn-primary" [disabled]="saving()" [attr.aria-busy]="saving()">
+        @if (saving()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          Saving…
+        } @else {
+          Save card
+        }
+      </button>
+    </footer>
+  </form>
+</dialog>

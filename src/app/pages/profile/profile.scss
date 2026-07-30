@@ -1,0 +1,78 @@
+// The profile page. Only what is unique to it — the canvas, the glass panels,
+// the inputs and the buttons are all global in src/styles/_theme.scss, and the
+// app bar / tab bar / drawer come from src/app/shared/app-shell.
+
+:host {
+  display: block;
+}
+
+/// One readable column. Same reasoning as the register form: a form reads
+/// worse the wider its fields get, because the label and the value drift apart.
+.profile__col {
+  max-width: 34rem;
+}
+
+/// Sits under a field carrying either its hint or its error.
+.profile__hint {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/// The avatar. Fixed square with `position: relative` so the busy overlay can
+/// cover exactly it and nothing else.
+.profile__avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 6rem;
+  height: 6rem;
+  border: 1px solid var(--myc-glass-border-lit);
+  border-radius: 50%;
+  background: var(--myc-gradient-cool);
+  overflow: hidden;
+}
+
+/// object-fit: cover, so a photo of any shape fills the circle without being
+/// squashed — a portrait selfie and a wide crop both look deliberate.
+.profile__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile__initials {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--myc-text);
+}
+
+/// Dims the avatar while an upload is in flight, so the old photo visibly
+/// isn't the current one yet.
+.profile__avatar--busy .profile__photo,
+.profile__avatar--busy .profile__initials {
+  opacity: 0.35;
+}
+
+.profile__spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.profile__fixed {
+  font-size: 0.88rem;
+
+  > div + div {
+    border-top: 1px solid var(--myc-glass-border);
+  }
+}
+
+/// Monospaced: an identifier that gets read out and copied down is only
+/// unambiguous if the 0s and the O it hasn't got are told apart at a glance.
+.profile__id {
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Segoe UI Mono", Menlo, monospace;
+  letter-spacing: 0.04em;
+}

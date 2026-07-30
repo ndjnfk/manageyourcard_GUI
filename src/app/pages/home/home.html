@@ -1,0 +1,407 @@
+<!-- Landing page shown before a shopkeeper signs in. Sections:
+     hero → dashboard preview → features → how it works → due dates → reviews
+     → CTA → footer.
+
+     Layout, spacing and typography are Bootstrap utilities; the .myc-* classes
+     are the shared theme pieces from src/styles/_theme.scss. This component's
+     own stylesheet only holds the hero card art, which exists nowhere else. -->
+<div class="myc-canvas">
+  <a class="myc-skip-link position-absolute px-3 py-2 rounded-3 text-decoration-none" href="#main">
+    Skip to content
+  </a>
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────── -->
+  <header class="myc-nav sticky-top border-bottom">
+    <nav class="navbar navbar-expand-lg py-0 w-100">
+      <div class="container">
+        <a class="navbar-brand d-inline-flex align-items-center p-0 m-0" href="#hero">
+          <app-logo />
+        </a>
+
+        <!-- Desktop nav, inline in the bar. The mobile drawer is a separate
+             element outside this header — see the bottom of the file. -->
+        <div class="d-none d-lg-flex align-items-center flex-grow-1">
+          <ul class="navbar-nav flex-row mx-auto mb-0">
+            @for (link of navLinks; track link.href) {
+              <li class="nav-item">
+                <a class="nav-link px-3 fw-medium" [href]="link.href">{{ link.label }}</a>
+              </li>
+            }
+          </ul>
+          <div class="d-flex gap-2">
+            <a class="myc-btn-ghost myc-btn-sm shadow-none" routerLink="/login">Sign in</a>
+            <a class="myc-btn-primary myc-btn-sm" routerLink="/register">Get started</a>
+          </div>
+        </div>
+
+        <button
+          class="navbar-toggler d-lg-none border-0 px-2"
+          type="button"
+          aria-controls="landingNav"
+          [attr.aria-expanded]="menuOpen()"
+          aria-label="Open menu"
+          (click)="toggleMenu()"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- ── Hero ───────────────────────────────────────────────────────── -->
+    <section class="myc-section text-center" id="hero">
+      <div class="container">
+        <p
+          class="d-inline-flex align-items-center gap-2 mb-4 px-3 py-2 border rounded-pill myc-tint small text-body-secondary"
+        >
+          <span class="myc-dot text-success" aria-hidden="true"></span>
+          New — Notification reminders for cards due this week
+        </p>
+
+        <h1 class="myc-title myc-title--hero m-0">
+          Never miss a<br />
+          <span class="myc-title-accent">card renewal</span> again
+        </h1>
+
+        <p class="myc-lead myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary">
+          Keep every card your shop has issued in one register, and let the dashboard tell you
+          what's due today, what's due this week and what's already overdue.
+        </p>
+
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+          <a class="myc-btn-primary" routerLink="/dashboard">Open your dashboard</a>
+          <a class="myc-btn-ghost" href="#how-it-works">See how it works</a>
+        </div>
+
+        <!-- Fanned card stack, pure CSS — no images to download. -->
+        <div class="card-stack" aria-hidden="true">
+          <div class="card-art card-art--back d-flex flex-column p-3 text-start">
+            <span class="d-flex align-items-center gap-2 small">
+              <i class="myc-dot text-danger"></i> C002 · Amit
+            </span>
+            <span class="mt-auto card-art__meta">Due 25 Jul 2026</span>
+          </div>
+          <div class="card-art card-art--mid d-flex flex-column p-3 text-start">
+            <span class="d-flex align-items-center gap-2 small">
+              <i class="myc-dot text-success"></i> C003 · Priya
+            </span>
+            <span class="mt-auto card-art__meta">Due 15 Aug 2026</span>
+          </div>
+          <div class="card-art card-art--front d-flex flex-column p-3 text-start">
+            <span class="d-flex justify-content-between align-items-center">
+              <span class="fw-semibold">C001</span>
+              <span class="bg-white bg-opacity-25 rounded-pill px-2 py-1 card-art__meta">
+                Due soon
+              </span>
+            </span>
+            <span class="fs-5 fw-bold mt-2">Rahul</span>
+            <span class="card-art__meta opacity-75">+91 94XXX XXXXX</span>
+            <span class="mt-auto card-art__meta">Due 30 Jul 2026</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Dashboard preview ──────────────────────────────────────────── -->
+    <section class="container" aria-label="Dashboard preview">
+      <div class="myc-glass p-4 p-lg-5">
+        <p class="myc-eyebrow text-center mb-4">A shopkeeper's dashboard, at a glance</p>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-4 text-center">
+          @for (stat of stats; track stat.label) {
+            <div class="col">
+              <div class="fs-3 fw-bold lh-1" [class]="stat.tone">{{ stat.value }}</div>
+              <div class="small mt-1 text-body-secondary">{{ stat.label }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Features ───────────────────────────────────────────────────── -->
+    <section class="myc-section" id="features">
+      <div class="container">
+        <header class="myc-measure mx-auto mb-5 text-center">
+          <p class="myc-eyebrow mb-2">Why manageyourcard</p>
+          <h2 class="myc-title m-0">
+            Built for shops that live by <span class="myc-title-accent">renewal dates</span>
+          </h2>
+          <p class="myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary lh-base">
+            No accounts, no payments, no billing to reconcile. Just the cards you have issued and
+            the dates that matter on them.
+          </p>
+        </header>
+
+        <div class="row g-3 g-lg-4">
+          @for (feature of features; track feature.title) {
+            <div [class]="feature.span">
+              <article class="myc-glass h-100 p-4 p-lg-5">
+                <span
+                  class="myc-icon-tile d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+                  aria-hidden="true"
+                >
+                  @switch (feature.icon) {
+                    @case ('cards') {
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <rect x="2" y="7" width="16" height="11" rx="2.5" />
+                        <path d="M6 4.5h13A2.5 2.5 0 0 1 21.5 7v8" opacity=".55" />
+                        <path d="M2 11h16" />
+                      </svg>
+                    }
+                    @case ('calendar') {
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                        <rect x="3" y="5" width="18" height="16" rx="2.5" />
+                        <path d="M3 10h18M8 3v4M16 3v4" />
+                        <circle cx="8.5" cy="14.5" r="1.3" fill="currentColor" stroke="none" />
+                      </svg>
+                    }
+                    @case ('search') {
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="6.5" />
+                        <path d="m16 16 4.5 4.5" />
+                      </svg>
+                    }
+                    @case ('bell') {
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+                        <path d="M6.5 9a5.5 5.5 0 0 1 11 0v4l1.8 3H4.7l1.8-3z" />
+                        <path d="M10 19.5a2.2 2.2 0 0 0 4 0" stroke-linecap="round" />
+                      </svg>
+                    }
+                  }
+                </span>
+                <h3 class="fs-5 fw-semibold mb-2">{{ feature.title }}</h3>
+                <p class="m-0 text-body-secondary lh-base">{{ feature.body }}</p>
+              </article>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ── How it works ───────────────────────────────────────────────── -->
+    <section class="myc-section" id="how-it-works">
+      <div class="container">
+        <header class="myc-measure mx-auto mb-5 text-center">
+          <p class="myc-eyebrow mb-2">How it works</p>
+          <h2 class="myc-title m-0">
+            Set up in <span class="myc-title-accent">3 simple steps</span>
+          </h2>
+          <p class="myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary lh-base">
+            Nothing to install and nothing to print. If you can fill in a card number, you're done.
+          </p>
+        </header>
+
+        <ol class="row g-3 g-lg-4 list-unstyled m-0 p-0">
+          @for (step of steps; track step.title; let i = $index) {
+            <li class="col-12 col-md-4">
+              <article class="myc-glass h-100 p-4 p-lg-5">
+                <span class="myc-title-accent d-block fs-2 fw-bold lh-1 mb-3" aria-hidden="true">
+                  0{{ i + 1 }}
+                </span>
+                <h3 class="fs-5 fw-semibold mb-2">{{ step.title }}</h3>
+                <p class="m-0 text-body-secondary lh-base">{{ step.body }}</p>
+              </article>
+            </li>
+          }
+        </ol>
+      </div>
+    </section>
+
+    <!-- ── Due dates / statuses ───────────────────────────────────────── -->
+    <section class="myc-section" id="due-dates">
+      <div class="container">
+        <header class="myc-measure mx-auto mb-5 text-center">
+          <p class="myc-eyebrow mb-2">Due dates</p>
+          <h2 class="myc-title m-0">
+            Three states, worked out <span class="myc-title-accent">for you</span>
+          </h2>
+          <p class="myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary lh-base">
+            You never set a status by hand. Every card is compared against today's date, so the
+            register is right whenever you open it.
+          </p>
+        </header>
+
+        <div class="row g-3 g-lg-4">
+          @for (status of statuses; track status.label) {
+            <div class="col-12 col-md-4">
+              <article class="myc-glass h-100 p-4">
+                <span class="d-flex align-items-center gap-2 fs-5 fw-semibold" [class]="status.tone">
+                  <i class="myc-dot" aria-hidden="true"></i>
+                  {{ status.label }}
+                </span>
+                <p class="small mt-2 mb-3 text-body-tertiary">{{ status.rule }}</p>
+                <p class="m-0 text-body-secondary lh-base">{{ status.body }}</p>
+              </article>
+            </div>
+          }
+        </div>
+
+        <!-- The worked example: one shop's cards, nobody else's. -->
+        <!-- <div class="myc-glass mt-4 p-4 p-lg-5">
+          <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
+            <h3 class="fs-5 fw-semibold m-0">Shopkeeper ID: SHOP001</h3>
+            <span class="small text-body-tertiary">Showing 3 of 214 cards</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr class="small text-body-tertiary">
+                  <th scope="col" class="fw-medium">Card no</th>
+                  <th scope="col" class="fw-medium">Customer</th>
+                  <th scope="col" class="fw-medium">Due date</th>
+                  <th scope="col" class="fw-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (card of sampleCards; track card.cardNo) {
+                  <tr>
+                    <td class="fw-semibold">{{ card.cardNo }}</td>
+                    <td>{{ card.customer }}</td>
+                    <td class="text-body-secondary">{{ card.due }}</td>
+                    <td>
+                      <span class="badge rounded-pill" [class]="card.tone">{{ card.status }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="small mt-3 mb-0 text-body-tertiary">
+            Only cards belonging to SHOP001 are ever loaded — each shop's register is isolated by
+            its Shopkeeper ID.
+          </p>
+        </div> -->
+      </div>
+    </section>
+
+    <!-- ── Reviews ────────────────────────────────────────────────────── -->
+    <section class="myc-section" id="reviews">
+      <div class="container">
+        <header class="myc-measure mx-auto mb-5 text-center">
+          <p class="myc-eyebrow mb-2">Reviews</p>
+          <h2 class="myc-title m-0">
+            What shopkeepers <span class="myc-title-accent">tell us</span>
+          </h2>
+          <p class="myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary lh-base">
+            From shops that were running the whole thing out of a diary.
+          </p>
+        </header>
+
+        <!-- Swipeable rail on phones, plain 3-up grid from lg up. -->
+        <div class="myc-rail gap-3 gap-lg-4">
+          @for (review of testimonials; track review.name) {
+            <article class="myc-glass p-4 d-flex flex-column">
+              <div class="myc-stars d-flex gap-1" aria-label="Rated 5 out of 5">
+                @for (star of [1, 2, 3, 4, 5]; track star) {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2.6l2.9 6 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5L2.6 9.5l6.5-.9z" />
+                  </svg>
+                }
+              </div>
+              <blockquote class="my-3 flex-grow-1 text-body-secondary lh-base">
+                {{ review.quote }}
+              </blockquote>
+              <footer class="d-flex align-items-center gap-3 mt-auto">
+                <span
+                  class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center small fw-semibold"
+                  aria-hidden="true"
+                >
+                  {{ review.initials }}
+                </span>
+                <span>
+                  <span class="d-block small fw-semibold">{{ review.name }}</span>
+                  <span class="d-block small text-body-tertiary">{{ review.shop }}</span>
+                </span>
+              </footer>
+            </article>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Closing CTA ────────────────────────────────────────────────── -->
+    <section class="myc-section">
+      <div class="container">
+        <div class="myc-glass myc-glow-panel text-center px-4 py-5 p-lg-5">
+          <h2 class="myc-title m-0">Put the register down</h2>
+          <p class="myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary lh-base">
+            Add your cards once, update a due date after each renewal, and let the dashboard keep
+            track of the rest.
+          </p>
+          <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a class="myc-btn-primary" routerLink="/register">Get started</a>
+            <a class="myc-btn-ghost" href="#features">See what it does</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ───────────────────────────────────────────────────────── -->
+  <footer class="border-top py-5">
+    <div class="container">
+      <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4"
+      >
+        <div>
+          <app-logo size="sm" />
+          <p class="small mt-2 mb-0 text-body-tertiary">Every card, every due date, one screen.</p>
+        </div>
+        <nav class="d-flex flex-wrap gap-3 gap-md-4" aria-label="Footer">
+          @for (link of navLinks; track link.href) {
+            <a class="small text-body-secondary text-decoration-none" [href]="link.href">
+              {{ link.label }}
+            </a>
+          }
+          <a class="small text-body-secondary text-decoration-none" href="#">Privacy</a>
+          <a class="small text-body-secondary text-decoration-none" href="#">Terms</a>
+        </nav>
+      </div>
+      <p class="small mt-4 mb-0 text-body-tertiary">
+        © {{ year }} manageyourcard. All rights reserved.
+      </p>
+    </div>
+  </footer>
+</div>
+
+<!-- ── Mobile drawer ──────────────────────────────────────────────────────
+     Deliberately outside .myc-canvas: it is position:fixed, and both the
+     sticky header's backdrop-filter and the canvas's overflow clipping would
+     otherwise confine it. Being fixed is also what stops it from pushing the
+     page down the way the old dropdown did. -->
+<div
+  class="offcanvas-backdrop fade d-lg-none"
+  [class.show]="menuOpen()"
+  aria-hidden="true"
+  (click)="closeMenu()"
+></div>
+
+<aside
+  class="offcanvas offcanvas-end myc-drawer d-lg-none"
+  id="landingNav"
+  tabindex="-1"
+  aria-label="Menu"
+  [class.show]="menuOpen()"
+>
+  <div class="offcanvas-header border-bottom">
+    <app-logo size="sm" />
+    <button type="button" class="btn-close" aria-label="Close menu" (click)="closeMenu()"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <ul class="navbar-nav flex-column mb-4">
+      @for (link of navLinks; track link.href) {
+        <li class="nav-item">
+          <!-- Closing on tap matters: without it the drawer covers the section
+               the link just jumped to. -->
+          <a class="nav-link py-2 fw-medium" [href]="link.href" (click)="closeMenu()">
+            {{ link.label }}
+          </a>
+        </li>
+      }
+    </ul>
+    <div class="d-flex flex-column gap-2 mt-auto">
+      <a class="myc-btn-ghost shadow-none" routerLink="/login" (click)="closeMenu()">Sign in</a>
+      <a class="myc-btn-primary" routerLink="/register" (click)="closeMenu()">Get started</a>
+    </div>
+  </div>
+</aside>

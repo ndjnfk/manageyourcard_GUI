@@ -1,0 +1,172 @@
+<!-- Admin panel chrome: a fixed side panel and a top bar, with the page
+     projected between them.
+
+     The side panel carries both the navigation and the destructive
+     maintenance actions. Each of those demands a typed confirmation before it
+     runs — they wipe every shop's data, and being one click away from that in
+     a permanently visible panel would be reckless. -->
+<div class="myc-canvas admin d-flex">
+  <a class="myc-skip-link position-absolute px-3 py-2 rounded-3 text-decoration-none" href="#main">
+    Skip to content
+  </a>
+
+  <!-- Backdrop for the panel on narrow screens, where it slides over. -->
+  <div
+    class="admin__scrim d-lg-none"
+    [class.admin__scrim--on]="navOpen()"
+    aria-hidden="true"
+    (click)="closeNav()"
+  ></div>
+
+  <!-- ── Side panel ─────────────────────────────────────────────────────── -->
+  <aside
+    class="admin__side d-flex flex-column"
+    [class.admin__side--open]="navOpen()"
+    id="adminNav"
+    aria-label="Admin navigation"
+  >
+    <div class="admin__brand d-flex align-items-center justify-content-between gap-2">
+      <span>
+        <span class="myc-eyebrow d-block mb-1">manageyourcard</span>
+        <span class="fw-semibold">Admin panel</span>
+      </span>
+      <button
+        type="button"
+        class="myc-icon-action d-lg-none"
+        aria-label="Close menu"
+        (click)="closeNav()"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <nav class="admin__nav" aria-label="Sections">
+      @for (link of navLinks; track link.route) {
+        <a
+          class="admin__nav-item d-flex align-items-center gap-2"
+          routerLinkActive="admin__nav-item--on"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
+          [routerLink]="link.route"
+          (click)="closeNav()"
+        >
+          {{ link.label }}
+        </a>
+      }
+    </nav>
+
+    <!-- ── Maintenance ────────────────────────────────────────────────
+         Destructive, so nothing here fires on a single click. Choosing one
+         arms it; it runs only once CONFIRM has been typed. -->
+    <div class="admin__tools mt-auto">
+      <p class="myc-eyebrow mb-2">Maintenance</p>
+
+      @if (result(); as message) {
+        <p class="admin__note admin__note--ok mb-2" role="status">{{ message }}</p>
+      }
+      @if (failure(); as message) {
+        <p class="admin__note admin__note--bad mb-2" role="alert">{{ message }}</p>
+      }
+
+      @for (item of maintenance; track item.action) {
+        <div class="admin__tool">
+          @if (confirming()?.action === item.action) {
+            <p class="admin__tool-warning m-0 mb-2">{{ item.warning }}</p>
+            <label class="admin__tool-label d-block mb-1" [attr.for]="'confirm-' + item.action">
+              Type <strong>CONFIRM</strong> to continue
+            </label>
+            <input
+              class="myc-input admin__tool-input"
+              [id]="'confirm-' + item.action"
+              type="text"
+              autocomplete="off"
+              placeholder="CONFIRM"
+              [value]="confirmText()"
+              [disabled]="running()"
+              (input)="onConfirmInput($event)"
+            />
+            <div class="d-flex gap-2 mt-2">
+              <button
+                type="button"
+                class="myc-btn-primary myc-btn-sm flex-grow-1"
+                [disabled]="!canRun()"
+                (click)="run()"
+              >
+                {{ running() ? 'Working…' : 'Run' }}
+              </button>
+              <button
+                type="button"
+                class="myc-btn-ghost myc-btn-sm"
+                [disabled]="running()"
+                (click)="cancelConfirm()"
+              >
+                Cancel
+              </button>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="admin__tool-btn w-100 text-start"
+              [disabled]="running()"
+              (click)="askConfirm(item)"
+            >
+              <span class="d-block fw-medium">{{ item.label }}</span>
+              <span class="d-block admin__tool-detail">{{ item.detail }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </aside>
+
+  <!-- ── Page ───────────────────────────────────────────────────────────── -->
+  <div class="admin__body flex-grow-1 min-w-0 d-flex flex-column">
+    <header class="myc-nav admin__bar border-bottom">
+      <div class="d-flex align-items-center gap-3 w-100 px-3 px-lg-4">
+        <button
+          type="button"
+          class="myc-icon-action d-lg-none"
+          aria-controls="adminNav"
+          [attr.aria-expanded]="navOpen()"
+          aria-label="Open menu"
+          (click)="toggleNav()"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+          @if (admin(); as admin) {
+            <span class="lh-sm text-end d-none d-sm-block">
+              <span class="d-block small fw-semibold">{{ admin.name }}</span>
+              <!-- An admin session expires on its own after seven days, unlike
+                   a shopkeeper's. Saying when avoids being surprised by it. -->
+              <span class="d-block admin__meta text-body-tertiary">
+                @if (daysLeft() !== null) {
+                  Session ends in {{ daysLeft() }}d
+                } @else {
+                  {{ admin.email }}
+                }
+              </span>
+            </span>
+          }
+
+          <button
+            type="button"
+            class="myc-btn-ghost myc-btn-sm"
+            [disabled]="signingOut()"
+            (click)="signOut()"
+          >
+            {{ signingOut() ? 'Signing out…' : 'Sign out' }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="admin__main flex-grow-1 p-3 p-lg-4">
+      <ng-content />
+    </main>
+  </div>
+</div>

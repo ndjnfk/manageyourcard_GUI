@@ -1,0 +1,15 @@
+// The "Add new card" dialog.
+//
+// The dialog shell — the sheet-on-phone / card-on-desktop shape, the backdrop,
+// the fixed head and foot with a scrolling body — is shared with the edit
+// dialog and lives in src/styles/_theme.scss as .myc-dialog*. Only what is
+// unique to this form belongs here.
+
+:host {
+  display: contents;
+}
+
+.card-dialog__notes {
+  min-height: 4.5rem;
+  resize: vertical;
+}

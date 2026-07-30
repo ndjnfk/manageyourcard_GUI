@@ -1,0 +1,198 @@
+// The admin panel's chrome. Deliberately plainer than the shopkeeper app: this
+// is a tool for one person, not a shopfront, so the aurora glass is dialled
+// back to a flat panel and a plain working surface.
+
+@use "../../../styles/mixins" as mixins;
+
+:host {
+  display: block;
+}
+
+.admin {
+  min-height: 100dvh;
+}
+
+// ── Side panel ───────────────────────────────────────────────────────────────
+
+/// Fixed on laptops, a slide-over below lg. `position: fixed` on the narrow
+/// case so it covers the page rather than pushing it sideways.
+.admin__side {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 1045;
+  width: min(17.5rem, 84vw);
+  padding: 1.25rem;
+  background: rgba(10, 5, 24, 0.97);
+  border-right: 1px solid var(--myc-glass-border);
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+
+  @supports (backdrop-filter: blur(1px)) {
+    background: rgba(10, 5, 24, 0.86);
+    backdrop-filter: blur(20px);
+  }
+}
+
+.admin__side--open {
+  transform: translateX(0);
+}
+
+/// From lg the panel is permanent, and the page sits beside it.
+@media (min-width: 992px) {
+  .admin__side {
+    transform: none;
+    transition: none;
+  }
+
+  .admin__body {
+    margin-inline-start: min(17.5rem, 84vw);
+  }
+}
+
+.admin__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  background: rgba(6, 3, 18, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.28s ease,
+    visibility 0.28s;
+}
+
+.admin__scrim--on {
+  opacity: 1;
+  visibility: visible;
+}
+
+.admin__brand {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--myc-glass-border);
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+
+.admin__nav {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin__nav-item {
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--myc-radius-sm);
+  color: var(--myc-text-muted);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--myc-glass-bg);
+    color: var(--myc-text);
+  }
+}
+
+.admin__nav-item--on {
+  background: var(--myc-gradient-cool);
+  color: var(--myc-text);
+}
+
+// ── Maintenance ──────────────────────────────────────────────────────────────
+
+.admin__tools {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--myc-glass-border);
+}
+
+.admin__tool + .admin__tool {
+  margin-top: 0.5rem;
+}
+
+/// Not a primary button: these are destructive, and a panel of inviting
+/// buttons is an invitation to press one.
+.admin__tool-btn {
+  appearance: none;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--myc-glass-border);
+  border-radius: var(--myc-radius-sm);
+  background: none;
+  color: var(--myc-text-muted);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: rgba(255, 77, 109, 0.5);
+    color: var(--myc-text);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.admin__tool-detail,
+.admin__tool-label,
+.admin__meta {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--myc-text-faint);
+}
+
+/// The armed state. Red-edged, because what follows cannot be undone.
+.admin__tool-warning {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid rgba(255, 77, 109, 0.45);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(255, 77, 109, 0.12);
+  color: var(--myc-text);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.admin__tool-input {
+  min-height: 2.25rem;
+  padding-block: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.admin__note {
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--myc-radius-sm);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.admin__note--ok {
+  border: 1px solid rgba(61, 217, 192, 0.4);
+  background: rgba(61, 217, 192, 0.12);
+}
+
+.admin__note--bad {
+  border: 1px solid rgba(255, 77, 109, 0.45);
+  background: rgba(255, 77, 109, 0.12);
+}
+
+// ── Page surface ─────────────────────────────────────────────────────────────
+
+.admin__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.admin__main {
+  // Wide, but not edge-to-edge on an ultrawide monitor where a table would
+  // stretch until the columns lose all relation to each other.
+  max-width: 90rem;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin__side,
+  .admin__scrim {
+    transition: none;
+  }
+}

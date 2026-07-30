@@ -1,0 +1,170 @@
+// Only what is unique to the dashboard lives here. Everything reusable — the
+// glass surfaces, buttons, drawer, the search field, the filter chips, the
+// mobile tab bar and the safe-area helpers — is global in
+// src/styles/_theme.scss, and all layout/spacing/typography comes from
+// Bootstrap utilities in the template. That is what keeps this file inside the
+// 4 kB per-component style budget as the page grows.
+//
+// The mobile rules that do live here follow the same two conventions as the
+// theme: at least 44px of tappable area on anything interactive, and hover
+// effects behind @media (hover: hover) so they never latch on touch.
+
+@use "../../../styles/mixins" as mixins;
+
+:host {
+  display: block;
+}
+
+/// Sub-label size, one step below Bootstrap's .small (0.875em).
+.dash-meta {
+  font-size: 0.78rem;
+}
+
+// The app bar's search cap, its bell badge and the avatar photo moved to
+// src/app/shared/app-shell along with the chrome itself.
+
+// ── Attention banner ─────────────────────────────────────────────────────────
+
+.dash-alert {
+  border-color: rgba(245, 166, 35, 0.45);
+}
+
+.dash-alert__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  background: linear-gradient(135deg, #f5a623 0%, #ff4d6d 100%);
+  box-shadow: 0 0 22px rgba(245, 166, 35, 0.45);
+}
+
+// ── Stat tiles ───────────────────────────────────────────────────────────────
+// Each tile is a <button> that filters the register below, so it has to shed
+// the UA button styling and take its colours from the theme instead.
+
+.stat {
+  display: block;
+  appearance: none;
+  color: inherit;
+  font: inherit;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--myc-glass-border-lit);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/// The currently applied filter.
+.stat--on {
+  @include mixins.glass-lit;
+}
+
+.stat__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  background: var(--myc-glass-bg-strong);
+  border: 1px solid var(--myc-glass-border);
+}
+
+.stat__value {
+  // Two tiles per row on a 360px phone still leaves room for a big number.
+  font-size: clamp(1.6rem, 7vw, 2.15rem);
+}
+
+// ── Card tiles ───────────────────────────────────────────────────────────────
+
+.card-tile {
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--myc-glass-border-lit);
+    }
+  }
+}
+
+/// Overdue cards keep a red edge so they read as unfinished at a glance.
+.card-tile--alert {
+  border-color: rgba(255, 77, 109, 0.45);
+}
+
+/// "Renewed" under the customer's name. Deliberately quiet — it is a fact
+/// about the card's past, not something that needs acting on today, so it
+/// must not compete with the status badge beside it.
+.card-tile__renewed {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid rgba(61, 217, 192, 0.35);
+  border-radius: var(--myc-radius-pill);
+  background: rgba(61, 217, 192, 0.12);
+  color: var(--myc-teal);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/// Cycle-progress ring: a conic gradient masked into a ring by an inset disc.
+/// Colour comes from the status class on the element, sweep from the --ring
+/// custom property the template sets per card. No chart library involved.
+.ring {
+  --ring: 0%;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: conic-gradient(currentColor var(--ring), rgba(255, 255, 255, 0.12) 0);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--myc-bg-raised);
+  }
+}
+
+.ring__value {
+  // ::after is generated *after* this element's content, so without a stacking
+  // order the disc paints straight over the number and hides it.
+  position: relative;
+  z-index: 1;
+  color: var(--myc-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+
+  small {
+    font-size: 0.75em;
+    opacity: 0.7;
+  }
+}
+
+// ── Renewals / overdue rows ──────────────────────────────────────────────────
+
+.timeline-row + .timeline-row {
+  border-top: 1px solid var(--myc-glass-border);
+}
+
+.timeline-row__day {
+  width: 2.75rem;
+  font-size: 1.05rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat,
+  .card-tile {
+    transition: none;
+  }
+}

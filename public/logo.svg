@@ -1,0 +1,31 @@
+<!-- Brand mark: the favicon, and the same design as the installed app icon in
+     public/icons — the tab and the home screen should not disagree.
+
+     A saturated tile with a white card on it, rather than a coloured card on a
+     dark tile. At the 16px a browser tab actually renders, and the 48px an OS
+     shows, contrast is the only thing that survives; fine detail turns to
+     mush. Four shapes, no more. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <!-- Magenta into violet into indigo, so the tile has depth rather than
+         being a flat two-stop ramp. -->
+    <linearGradient id="tile" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c13af5" />
+      <stop offset=".5" stop-color="#7b2ff7" />
+      <stop offset="1" stop-color="#6c4dff" />
+    </linearGradient>
+    <!-- The aurora bloom the rest of the app is built around. -->
+    <radialGradient id="bloom" cx="9" cy="7" r="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity=".28" />
+      <stop offset="1" stop-color="#fff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="32" height="32" rx="7" fill="url(#tile)" />
+  <rect width="32" height="32" rx="7" fill="url(#bloom)" />
+
+  <!-- 19.2 x 12.8 is a real card's proportions, centred with room to spare. -->
+  <rect x="6.4" y="9.6" width="19.2" height="12.8" rx="2.2" fill="#fff" />
+  <rect x="6.4" y="12.3" width="19.2" height="2.6" fill="#7b2ff7" />
+  <rect x="8.5" y="16.6" width="4.5" height="3.2" rx=".8" fill="#3dd9c0" />
+</svg>

@@ -1,0 +1,55 @@
+// The "Edit card" dialog.
+//
+// The dialog shell and the switch are shared with the add form and live in
+// src/styles/_theme.scss as .myc-dialog* and .myc-switch*. Only what is unique
+// to this form belongs here.
+
+:host {
+  display: contents;
+}
+
+.edit-card__notes {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+/// Renewing and completing each get their own panel: they are the two controls
+/// here that change what the card *is*, rather than correcting what it says.
+.edit-card__renew,
+.edit-card__done {
+  border: 1px solid var(--myc-glass-border);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+/// Lit once the panel is armed — the same "this one is selected" signal the
+/// rest of the app uses for an active surface. On the renew panel it is the
+/// only thing saying "saving will move the date", so it has to be obvious.
+.edit-card__renew--on,
+.edit-card__done--on {
+  border-color: var(--myc-glass-border-lit);
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.edit-card__renew .myc-chip {
+  padding-block: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.edit-card__facts {
+  font-size: 0.85rem;
+
+  > div + div {
+    border-top: 1px solid var(--myc-glass-border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-card__renew,
+  .edit-card__done {
+    transition: none;
+  }
+}

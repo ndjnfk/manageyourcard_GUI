@@ -1,0 +1,36 @@
+// Admin sign-in. Only what is unique to it — the canvas, the glass card, the
+// inputs and the buttons are all global in src/styles/_theme.scss.
+
+:host {
+  display: block;
+}
+
+.admin-login {
+  min-height: 100dvh;
+}
+
+/// Narrower than the shop's forms: two fields read worse the wider they get.
+.admin-login__col {
+  max-width: 26rem;
+}
+
+.admin-login__hint {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/// A rejected sign-in. Same treatment as the shopkeepers' sign-in page.
+.admin-login__alert {
+  border: 1px solid rgba(255, 77, 109, 0.45);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(255, 77, 109, 0.12);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.admin-login__code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 6px;
+  background: var(--myc-glass-bg);
+  color: var(--myc-text-muted);
+}
