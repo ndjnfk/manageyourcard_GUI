@@ -213,6 +213,13 @@
             </button>
           </form>
         </section>
+
+        <!-- ── Reminders ─────────────────────────────────────────────────
+             Its own component and its own panel, because it saves on a
+             different model from the form above: every toggle here applies
+             immediately, and folding them into that form would give it a Save
+             button that only saved some of what was on screen. -->
+        <app-notification-settings class="d-block mt-3" />
       </div>
     }
 </app-shell>

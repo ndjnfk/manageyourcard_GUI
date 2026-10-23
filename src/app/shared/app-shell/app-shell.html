@@ -10,10 +10,24 @@
   </a>
 
   <!-- ── App bar ──────────────────────────────────────────────────────────
-       Sticky on every size. On phones it carries only the brand, the bell and
+       Pinned on every size. On phones it carries only the brand, the bell and
        the menu; a page's search box drops into its own toolbar instead, where
-       there is room for a full-width field. -->
-  <header class="myc-nav myc-safe-top sticky-top border-bottom">
+       there is room for a full-width field.
+
+       `fixed-top`, not `sticky-top`, and the difference is not cosmetic. A
+       sticky element keeps its box in the normal flow — here, at the very top
+       of the document — while being painted at the top of the viewport. When
+       the shopkeeper types in the search box that sits in this bar, Chrome
+       scrolls the caret into view against that *flow* position, so every
+       keystroke dragged the page 44 pixels closer to the top. Deleting a name
+       one character at a time walked the whole page up.
+
+       A fixed element is out of flow and always in the viewport, so there is
+       nothing to scroll towards. Measured before and after: sticky gave
+       400 → 356 → 312 → 268 over three keystrokes, fixed holds 400 throughout.
+       The main below pays for it with a top padding the flow no longer
+       provides. -->
+  <header class="myc-nav myc-safe-top fixed-top border-bottom">
     <div class="container d-flex align-items-center gap-3">
       <a class="d-inline-flex align-items-center text-decoration-none text-body" routerLink="/dashboard">
         <app-logo />
@@ -40,16 +54,31 @@
           </button>
         }
 
-        <button type="button" class="myc-icon-action position-relative" aria-label="Reminders">
+        <!-- Opens the notifications page. A routerLink rather than a click
+             handler, so it behaves like the link it is: middle-click and
+             open-in-new-tab both work, and the browser shows the destination.
+
+             The badge counts *unread notifications*, not cards needing
+             attention. They are close but not the same, and the number has to
+             mean what the page it opens shows — a bell reading 2 that opens a
+             list with nothing new on it is worse than no badge at all. -->
+        <a
+          routerLink="/notifications"
+          class="myc-icon-action position-relative"
+          [attr.aria-label]="
+            unreadNotifications()
+              ? unreadNotifications() + ' unread notifications'
+              : 'Notifications'
+          "
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
             <path d="M6.5 9a5.5 5.5 0 0 1 11 0v4l1.8 3H4.7l1.8-3z" />
             <path d="M10 19.5a2.2 2.2 0 0 0 4 0" stroke-linecap="round" />
           </svg>
-          @if (attentionCount()) {
-            <span class="shell__badge" aria-hidden="true">{{ attentionCount() }}</span>
-            <span class="visually-hidden">{{ attentionCount() }} cards need attention</span>
+          @if (unreadNotifications()) {
+            <span class="shell__badge" aria-hidden="true">{{ unreadNotifications() }}</span>
           }
-        </button>
+        </a>
 
         <!-- Shop identity, spelled out only where there's width for it. The
              avatar is where anyone looks for their account, so it opens the
@@ -144,7 +173,13 @@
     </div>
   </header>
 
-  <main id="main" class="container myc-safe-bottom pt-4">
+  <!-- The padding replaces the space the app bar used to occupy in the flow.
+       Without it the first thing on every page starts underneath the bar. -->
+  <!-- The offset replaces the space the app bar used to occupy in the flow,
+       and carries the page's own top gutter with it. Bootstrap's `pt-4` cannot
+       be used alongside it — the spacing utilities are !important, so it would
+       win and the first thing on every page would sit under the bar. -->
+  <main id="main" class="container myc-nav-offset myc-safe-bottom">
     <ng-content />
   </main>
 

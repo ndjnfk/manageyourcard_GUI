@@ -2,6 +2,9 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, firstValueFrom, map, of, tap, throwError } from 'rxjs';
 import { API_BASE_URL, toApiError } from './api';
+// Type-only, so it is erased at build time and introduces no import cycle —
+// `push.ts` does not reach back into this module.
+import type { NotificationPreferences } from './push';
 
 /**
  * Where the session token is kept.
@@ -37,6 +40,12 @@ export interface Shop {
   email: string;
   /** Absolute URL of the profile photo, or null if none has been uploaded. */
   photoUrl: string | null;
+  /**
+   * Reminder settings. Always fully populated by the API, including for shops
+   * that registered before notifications existed — see `notificationsFor` on
+   * the server, which fills in the defaults rather than returning gaps.
+   */
+  notifications: NotificationPreferences;
   createdAt: string;
 }
 

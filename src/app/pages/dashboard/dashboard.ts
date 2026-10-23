@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   computed,
   inject,
   signal,
@@ -13,7 +14,8 @@ import { RouterLink } from '@angular/router';
 import { ApiError } from '../../shared/api';
 import { AppShell } from '../../shared/app-shell/app-shell';
 import { Auth } from '../../shared/auth';
-import { Card, Cards } from '../../shared/cards';
+import { CardDetails } from '../../shared/card-details/card-details';
+import { Card, CardStatus, Cards } from '../../shared/cards';
 import { AddCard } from './add-card/add-card';
 import { EditCard } from './edit-card/edit-card';
 
@@ -37,6 +39,27 @@ const STATE_META: Readonly<Record<CardState, StateMeta>> = {
   week: { label: 'Due soon', tone: 'text-warning', badge: 'text-bg-warning' },
   expired: { label: 'Overdue', tone: 'text-danger', badge: 'text-bg-danger' },
 };
+
+/**
+ * How one card is written, which for the red bucket is not a property of the
+ * bucket alone.
+ *
+ * "Overdue" and "Expired" land in the same group because both are finished as
+ * far as the register is concerned, but they are not the same sentence. A card
+ * whose renewal date passed yesterday is *overdue* and can still be renewed
+ * today; a card whose expiry passed is *expired*, and its due date — which may
+ * be days away yet — no longer means anything. Labelling the second one
+ * "Overdue" puts that word directly above a line reading "Expired yesterday".
+ */
+function metaFor(state: CardState, expiryPassed: boolean): StateMeta {
+  if (state === 'expired' && expiryPassed) {
+    // Muted, not red — see .myc-badge-expired. Red belongs to the cards still
+    // worth chasing, and an expired one is not among them.
+    return { label: 'Expired', tone: 'myc-text-expired', badge: 'myc-badge-expired' };
+  }
+
+  return STATE_META[state];
+}
 
 /** A card from the API with everything the template needs worked out. */
 interface DashboardCard {
@@ -62,6 +85,12 @@ interface DashboardCard {
    * differently.
    */
   readonly state: CardState;
+  /**
+   * Whether the card's own expiry has passed, as opposed to merely its due
+   * date. Only these are dimmed and stripped of their Edit button — an overdue
+   * card is the one thing this app exists to get renewed, so it keeps both.
+   */
+  readonly expired: boolean;
   readonly meta: StateMeta;
   /** "Due in 4 days" / "Due today" / "6 days overdue" — ready to print. */
   readonly relative: string;
@@ -79,6 +108,15 @@ interface StatTile {
   readonly tone: string;
   /** Filter applied when the tile is tapped, or null if it isn't a filter. */
   readonly filter: CardState | 'all' | null;
+  /**
+   * Scrolls to the renewals panels instead of filtering the register.
+   *
+   * For "Upcoming renewals", whose 30-day window is not one of the register's
+   * buckets — there is no filter that would show it. Before this the tile
+   * carried a real number and did nothing when tapped, which reads as broken
+   * rather than as decorative.
+   */
+  readonly scrolls?: boolean;
 }
 
 /** Filter chips above the register. */
@@ -119,14 +157,41 @@ function daysBetween(from: Date, to: Date): number {
   return Math.round((to.getTime() - from.getTime()) / DAY_MS);
 }
 
-function bucket(dueInDays: number): CardState {
+/**
+ * The finer four-way bucket, from the API's verdict plus the due date.
+ *
+ * The Expired decision is taken from `status` rather than worked out again
+ * here, because it is not a function of the due date alone: a card whose
+ * expiry has passed is Expired however far off its renewal still is. Deriving
+ * it from `dueInDays` — which is what this did — put a card the API had
+ * already marked Expired into "due this week", so the register and the badge
+ * on the same card disagreed.
+ *
+ * The `dueInDays < 0` line is kept below it as a fallback. The API recomputes
+ * a card's status whenever the register is read, so the two should never
+ * differ; if they ever do, a card past its due date still belongs here.
+ */
+function bucket(status: CardStatus, dueInDays: number): CardState {
+  if (status === 'Expired') return 'expired';
   if (dueInDays < 0) return 'expired';
   if (dueInDays === 0) return 'today';
   if (dueInDays <= 7) return 'week';
   return 'active';
 }
 
-function relativeLabel(dueInDays: number): string {
+/**
+ * "Due in 4 days" / "Expired 2 days ago" — ready to print.
+ *
+ * Expiry is reported in its own words and checked first. A card that expired
+ * yesterday but is not due until Sunday would otherwise read "Due in 3 days"
+ * beneath an Expired badge: two sentences that are each true and cannot both
+ * matter, and the one that matters is that the card is finished.
+ */
+function relativeLabel(dueInDays: number, expiryInDays: number | null): string {
+  if (expiryInDays !== null && expiryInDays < 0) {
+    return expiryInDays === -1 ? 'Expired yesterday' : `Expired ${Math.abs(expiryInDays)} days ago`;
+  }
+
   if (dueInDays === 0) return 'Due today';
   if (dueInDays === 1) return 'Due tomorrow';
   if (dueInDays > 1) return `Due in ${dueInDays} days`;
@@ -153,7 +218,7 @@ function initialsOf(name: string): string {
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [AddCard, AppShell, EditCard, DatePipe, NgTemplateOutlet, RouterLink],
+  imports: [AddCard, AppShell, CardDetails, EditCard, DatePipe, NgTemplateOutlet, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -167,6 +232,21 @@ export class Dashboard {
 
   /** The edit dialog, opened from a card's Edit button. */
   private readonly editCard = viewChild.required(EditCard);
+
+  /** The read-only details dialog — what an expired card offers in its place. */
+  private readonly cardDetails = viewChild.required(CardDetails);
+
+  /**
+   * The renewals + overdue panels, scrolled to from the banner and the tile.
+   *
+   * Optional rather than required: the section is projected through app-shell,
+   * and a required query that ever resolved to nothing would throw during
+   * change detection and take the whole dashboard down — a steep price for a
+   * scroll that could simply not happen.
+   */
+  private readonly panels = viewChild<ElementRef<HTMLElement>>('panels');
+
+
 
   /**
    * Whoever is signed in, from the session. Cards are isolated by `id` — the
@@ -236,6 +316,18 @@ export class Dashboard {
     this.showAllCards.set(false);
   }
 
+  /**
+   * Scrolls down to the renewals and overdue panels.
+   *
+   * What "Show them" and the renewals tile do. Both used to be dead ends: the
+   * banner filtered the register to today's cards without moving the page, and
+   * the tile did nothing at all — so the two places that name what needs doing
+   * did not take you to the list of it.
+   */
+  protected scrollToPanels(): void {
+    this.panels()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   /** "Good morning" before noon, and so on — the only clock-dependent copy. */
   protected readonly greeting = (() => {
     const hour = new Date().getHours();
@@ -285,7 +377,7 @@ export class Dashboard {
   /**
    * The register with everything the template needs worked out: which bucket
    * each card falls into, how it is written, and how far through its cycle it
-   * is. Sorted by urgency, soonest due first.
+   * is. Newest-issued first, with expired cards pushed to the end.
    */
   protected readonly cards = computed<readonly DashboardCard[]>(() => {
     const today = this.today;
@@ -296,6 +388,12 @@ export class Dashboard {
         const due = parseCalendarDate(card.dueDate) ?? today;
         const dueInDays = daysBetween(today, due);
         const cycle = daysBetween(issued, due);
+
+        // Null on a card with no expiry, which is most of them — the field is
+        // optional. Negative once the date has passed.
+        const expiry = card.expiryDate ? parseCalendarDate(card.expiryDate) : null;
+        const expiryInDays = expiry ? daysBetween(today, expiry) : null;
+        const expired = expiryInDays !== null && expiryInDays < 0;
 
         return {
           cardId: card.cardId,
@@ -310,9 +408,10 @@ export class Dashboard {
           issued,
           due,
           dueInDays,
-          state: bucket(dueInDays),
-          meta: STATE_META[bucket(dueInDays)],
-          relative: relativeLabel(dueInDays),
+          state: bucket(card.status, dueInDays),
+          expired,
+          meta: metaFor(bucket(card.status, dueInDays), expired),
+          relative: relativeLabel(dueInDays, expiryInDays),
           initials: initialsOf(card.customerName),
           progress:
             cycle > 0
@@ -320,7 +419,16 @@ export class Dashboard {
               : 100,
         };
       })
-      .sort((a, b) => a.dueInDays - b.dueInDays);
+      .sort((a, b) => {
+        // Expired cards sink to the bottom whatever their dates say. Nothing
+        // can be done about them, so they must not sit between two cards that
+        // still need calling.
+        if (a.expired !== b.expired) return a.expired ? 1 : -1;
+
+        // The rest come newest-issued first — the order the register was
+        // written in, read from the last page backwards.
+        return b.issued.getTime() - a.issued.getTime();
+      });
   });
 
   private count(state: CardState): number {
@@ -374,7 +482,9 @@ export class Dashboard {
       icon: 'alert',
       label: 'Expired',
       value: this.count('expired'),
-      hint: 'Past the due date',
+      // Both, because the tile counts both. "Past the due date" alone read as
+      // a promise the tile could not keep once expired cards joined it.
+      hint: 'Past due, or expired',
       tone: 'text-danger',
       filter: 'expired',
     },
@@ -386,6 +496,7 @@ export class Dashboard {
       hint: 'Next 30 days',
       tone: 'text-info',
       filter: null,
+      scrolls: true,
     },
   ]);
 
@@ -480,6 +591,21 @@ export class Dashboard {
     if (!card) return;
 
     this.editCard().open(card);
+  }
+
+  /**
+   * Shows everything on a card, read-only.
+   *
+   * What an expired card has instead of Edit. Removing Edit from those was
+   * deliberate, but Edit was also the only way to read a card's note, its
+   * dates and its customer's number — and a shop ringing someone about a card
+   * that ran out needs exactly those.
+   */
+  protected openCardDetails(cardId: string): void {
+    const card = this.register().find((entry) => entry.cardId === cardId);
+    if (!card) return;
+
+    this.cardDetails().open(card);
   }
 
   /**

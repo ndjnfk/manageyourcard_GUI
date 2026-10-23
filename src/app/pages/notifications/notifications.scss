@@ -1,0 +1,188 @@
+// The notifications page. Only what is unique to it — the canvas, the glass
+// panels and the buttons are all global in src/styles/_theme.scss.
+
+:host {
+  display: block;
+}
+
+/// One readable column, matching the profile page.
+.notif__col {
+  max-width: 40rem;
+}
+
+.notif__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/// A row. A real <button>, so its default appearance has to be undone before
+/// anything else — a browser's button styling would otherwise fight every rule
+/// below it.
+.notif__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--myc-glass-border);
+  border-radius: var(--myc-radius);
+  background: var(--myc-glass-bg);
+  backdrop-filter: blur(var(--myc-glass-blur));
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+
+  &:hover {
+    background: var(--myc-glass-bg-strong);
+    border-color: var(--myc-glass-border-lit);
+  }
+
+  &:active {
+    transform: scale(0.995);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--myc-violet-bright);
+    outline-offset: 2px;
+  }
+}
+
+/// Unread rows are brighter and carry a lit edge. Weight alone is not enough
+/// to separate them at a glance on a dark surface.
+.notif__item--unread {
+  background: var(--myc-glass-bg-strong);
+  border-color: rgba(168, 85, 247, 0.35);
+}
+
+/// The urgency dot. Coloured from data-tone so a row's colour matches the
+/// badge the dashboard puts on the same cards.
+.notif__dot {
+  flex-shrink: 0;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.42rem;
+  border-radius: 50%;
+  background: var(--myc-cyan);
+}
+
+.notif__item[data-tone="overdue"] .notif__dot {
+  background: var(--myc-red);
+}
+
+.notif__item[data-tone="today"] .notif__dot {
+  background: var(--myc-amber);
+}
+
+/// Read rows keep the dot but drain it, so the column still scans as a list
+/// while the unread ones stand out.
+.notif__item:not(.notif__item--unread) .notif__dot {
+  opacity: 0.35;
+}
+
+.notif__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.notif__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--myc-text);
+}
+
+.notif__item:not(.notif__item--unread) .notif__title {
+  font-weight: 500;
+  color: var(--myc-text-muted);
+}
+
+.notif__text {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--myc-text-muted);
+}
+
+.notif__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.notif__chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--myc-radius-pill);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/// Tinted from the same four accents the dashboard badges use. Low-alpha fill
+/// with a full-strength text colour, so they read on the dark surface without
+/// competing with the row's own title.
+/// Expired: muted, not one of the four accents. Red belongs to the cards still
+/// worth chasing, and giving the same red to a card nobody can act on teaches
+/// the eye to skip the colour — which costs the overdue ones their only signal.
+.notif__chip--expired {
+  background: var(--myc-glass-bg-strong);
+  color: var(--myc-text-muted);
+}
+
+.notif__chip--overdue {
+  background: rgba(255, 77, 109, 0.16);
+  color: var(--myc-red);
+}
+
+.notif__chip--today {
+  background: rgba(245, 166, 35, 0.16);
+  color: var(--myc-amber);
+}
+
+.notif__chip--soon {
+  background: rgba(53, 214, 240, 0.14);
+  color: var(--myc-cyan);
+}
+
+.notif__when {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--myc-text-faint);
+  white-space: nowrap;
+}
+
+.notif__empty-icon {
+  color: var(--myc-text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notif__item {
+    transition: none;
+  }
+
+  .notif__item:active {
+    transform: none;
+  }
+}
+
+/// On a narrow phone the timestamp column costs more than it gives — it pushes
+/// the title into two lines. Moved under the text instead.
+@media (max-width: 26rem) {
+  .notif__item {
+    flex-wrap: wrap;
+  }
+
+  .notif__when {
+    margin-left: 1.4rem;
+  }
+}

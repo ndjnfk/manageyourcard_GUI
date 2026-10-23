@@ -33,6 +33,10 @@
             "styles": [
               "node_modules/@fontsource/playfair-display/latin-700.css",
               "node_modules/@fontsource/great-vibes/latin-400.css",
+              "node_modules/@fontsource/inter/latin-400.css",
+              "node_modules/@fontsource/inter/latin-500.css",
+              "node_modules/@fontsource/inter/latin-600.css",
+              "node_modules/@fontsource/inter/latin-700.css",
               "src/styles.scss"
             ]
           },

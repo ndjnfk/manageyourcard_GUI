@@ -1,0 +1,45 @@
+// The canvas and the glass surfaces built on it.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.myc-canvas {
+  @include aurora-canvas;
+  // The decorative glows overhang the layout; clip rather than scroll sideways.
+  overflow-x: clip;
+}
+
+.myc-glass {
+  @include glass;
+}
+
+.myc-glass--strong {
+  @include glass(var(--myc-glass-bg-strong));
+}
+
+.myc-glass--lit {
+  @include glass-lit;
+}
+
+.myc-gradient-text {
+  @include gradient-text;
+}
+
+/// Flat translucent fill — badges, chips, anything needing a hint of surface
+/// without the full glass treatment.
+.myc-tint {
+  background: var(--myc-glass-bg);
+}
+
+/// Brand gradient as a background (featured badges, accents).
+.myc-gradient-bg {
+  background: var(--myc-gradient-primary);
+  box-shadow: var(--myc-glow-violet);
+}
+
+// --- Type ---------------------------------------------------------------------
+// Sizes are fluid, so there are no breakpoint jumps between phone and desktop.
+// Colour is left to Bootstrap's text-body-secondary / text-body-tertiary.

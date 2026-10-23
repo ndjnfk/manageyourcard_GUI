@@ -38,9 +38,17 @@ export const appConfig: ApplicationConfig = {
       const auth = inject(Auth);
       const adminAuth = inject(AdminAuth);
       return Promise.all([auth.restore(), adminAuth.restore()]);
-    }), provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }),
+    }),
+    // Resolved against the base href rather than passed as 'ngsw-worker.js'.
+    // A bare name is resolved against the *page's* URL, not the base tag, so
+    // opening /manageyourcard/cards/CRD-00001 directly — a bookmark, a link
+    // from a reminder email — would ask for
+    // /manageyourcard/cards/ngsw-worker.js and get a 404. That visit then has
+    // no service worker at all: no offline, no install offer, and nothing to
+    // say why.
+    provideServiceWorker(new URL('ngsw-worker.js', document.baseURI).pathname, {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

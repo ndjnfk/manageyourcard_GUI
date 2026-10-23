@@ -1,0 +1,174 @@
+// App bar, drawer, bottom tab bar and the safe-area helpers.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.myc-nav {
+  display: flex;
+  align-items: center;
+  min-height: var(--myc-nav-height);
+  background: rgba(10, 5, 24, 0.95);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background: rgba(10, 5, 24, 0.65);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+}
+
+/// Slide-in navigation drawer. Pairs with Bootstrap's .offcanvas /
+/// .offcanvas-end, which supply the fixed positioning and the slide transform.
+///
+/// Must NOT be nested inside anything with backdrop-filter, transform or
+/// filter — those create a containing block for fixed descendants and the
+/// drawer ends up trapped inside that element instead of the viewport.
+.myc-drawer {
+  --bs-offcanvas-width: min(20rem, 84vw);
+  background: rgba(10, 5, 24, 0.97);
+  border-left: 1px solid var(--myc-glass-border);
+  // Bootstrap transitions transform only, so dropping .show flips visibility
+  // to hidden at once and the panel vanishes instead of sliding out.
+  // Transitioning visibility holds it on screen until the slide finishes.
+  transition:
+    transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0.32s;
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background: rgba(10, 5, 24, 0.82);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+}
+
+/// The backdrop stays in the DOM so it can fade both ways — but an invisible
+/// full-screen layer must not swallow clicks meant for the page.
+.offcanvas-backdrop:not(.show) {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myc-drawer {
+    transition: none;
+  }
+}
+
+/// Set on <body> while a drawer is open, so the page behind doesn't scroll.
+.myc-no-scroll {
+  overflow: hidden;
+}
+
+/// Bottom tab bar — the destination switcher on phones inside the signed-in
+/// app. Pair with .d-lg-none; from lg up the nav bar carries the same links.
+/// Must sit OUTSIDE .myc-canvas for the reason given on .myc-drawer.
+///
+/// Children: .myc-tabbar__item (+ --on) with a .myc-tabbar__label inside, and
+/// at most one .myc-tabbar__fab as the raised centre action. Pages using it
+/// need bottom padding — see .myc-safe-bottom.
+.myc-tabbar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 1030;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  // Sits above the iOS home indicator / Android gesture bar rather than under
+  // it. Resolves to 0 in a normal browser tab.
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--myc-glass-border);
+  background: rgba(10, 5, 24, 0.96);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background: rgba(10, 5, 24, 0.72);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+}
+
+.myc-tabbar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 2.9rem; // stays a comfortable thumb target
+  padding: 0.35rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--myc-text-muted);
+  transition: color 0.2s ease;
+}
+
+.myc-tabbar__item--on {
+  color: var(--myc-violet-bright);
+}
+
+.myc-tabbar__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+/// Raised centre action in the tab bar.
+.myc-tabbar__fab {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  // Breaks the plane of the bar so it reads as the primary action.
+  margin-top: -1.5rem;
+  border: 3px solid var(--myc-bg);
+  border-radius: var(--myc-radius-pill);
+  background: var(--myc-gradient-primary);
+  color: var(--myc-text);
+  box-shadow: var(--myc-glow-violet);
+  transition: transform 0.2s ease;
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+/// Clears fixed bottom chrome (.myc-tabbar) plus the device's own inset.
+.myc-safe-bottom {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+
+  @media (min-width: 992px) {
+    padding-bottom: 4rem;
+  }
+}
+
+/// Clears the status bar / notch when installed to the home screen. Put it on
+/// fixed top chrome; resolves to 0 in a normal browser tab.
+.myc-safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/// Makes room for the fixed app bar, which no longer occupies space in the
+/// flow. Put it on the scrolling content directly beneath .myc-nav.
+///
+/// The bar is fixed rather than sticky on purpose — see the comment on the
+/// <header> in app-shell.html. A sticky bar keeps its box at the top of the
+/// document, and Chrome scrolls the caret towards that box every time someone
+/// types in the search field it carries.
+///
+/// The notch inset is added here as well as on the bar itself: the bar grows
+/// downward by that much on an installed phone app, so the space reserved for
+/// it has to grow by the same amount or the page slides under it.
+///
+/// The page's own top gutter is folded in rather than left to Bootstrap's
+/// `pt-4`. The spacing utilities are !important, so a `pt-4` on the same
+/// element would replace this padding outright and every page's heading would
+/// start underneath the bar.
+.myc-nav-offset {
+  padding-top: calc(var(--myc-nav-height) + env(safe-area-inset-top) + 1.5rem);
+}
+
+/// Bootstrap ships max-width utilities but no min-width ones, and a flex child
+/// won't shrink below its content — which is what makes .text-truncate
+/// silently do nothing inside a flex row.

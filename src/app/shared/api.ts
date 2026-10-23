@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { Capacitor } from '@capacitor/core';
 
 /**
- * Where the API lives.
+ * Where the API lives when this is running in a browser.
  *
  * The API runs on its own port (manageYourCardAPI, 3333) rather than behind
  * this app's dev server, so requests to it are cross-origin — its CORS_ORIGIN
@@ -10,7 +11,47 @@ import { HttpErrorResponse } from '@angular/common/http';
  *
  * For a deployment, point this at the deployed API's origin.
  */
-export const API_BASE_URL = 'http://localhost:3333/api/v1';
+// const WEB_API_URL = 'http://localhost:3333/api/v1';
+const WEB_API_URL = 'https://trustridesre.com/manageyourcard/api/v1';
+
+/**
+ * Where the API lives for the installed Android app.
+ *
+ * Separate from the web URL because "localhost" does not mean the same thing on
+ * a phone: it is the phone itself, so the browser default would have the app
+ * calling a server on the handset and failing with a connection refused that
+ * looks exactly like the API being down.
+ *
+ * This has to be an address the device can actually reach:
+ *
+ *   - a real deployed API over https — what a release build needs;
+ *   - during development, this machine's LAN address, e.g.
+ *     http://192.168.1.5:3333/api/v1, with the phone on the same Wi-Fi and
+ *     that origin added to CORS_ORIGIN in manageYourCardAPI/.env.
+ *
+ * Note that a debug build will not accept plain http either — see
+ * `allowMixedContent: false` in capacitor.config.ts, and the network security
+ * config in the Android project if a LAN address over http is needed.
+ */
+// const NATIVE_API_URL = 'http://192.168.29.179:3333/api/v1';
+const NATIVE_API_URL = 'https://trustridesre.com/manageyourcard/api/v1';
+
+
+/**
+ * The API base for whichever client this is.
+ *
+ * The address above is this development machine on the local network, because
+ * the app is tested on a real handset. Two other values are worth knowing:
+ *
+ *   - `http://10.0.2.2:3333/api/v1` — the Android emulator's alias for the
+ *     host machine's localhost, if testing moves to an emulator.
+ *   - the deployed API over https, for a release build.
+ *
+ * A LAN address is only good for as long as the router hands out the same one.
+ * If the app suddenly cannot reach the API, check this first — a DHCP lease
+ * expiring over a weekend is the usual culprit.
+ */
+export const API_BASE_URL = Capacitor.isNativePlatform() ? NATIVE_API_URL : WEB_API_URL;
 
 /**
  * The shape the API reports field-level problems in — the same for a 422 from

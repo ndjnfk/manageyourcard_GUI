@@ -13,6 +13,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth } from '../auth';
+import { Inbox } from '../inbox';
 import { Install } from '../install';
 import { Logo } from '../logo/logo';
 import { Toasts } from '../toast';
@@ -73,10 +74,22 @@ export class AppShell {
   protected readonly canInstall = this.install.canInstall;
 
   /**
-   * How many cards need attention today. Drives the bell's badge.
+   * Unread notifications. What the bell's badge shows.
+   *
+   * Read from the shared Inbox rather than taken as an input, because the badge
+   * has to stay correct on every page — including the notifications page
+   * itself, where marking everything read must clear the badge above it without
+   * either component knowing about the other.
+   */
+  protected readonly unreadNotifications = inject(Inbox).unreadCount;
+
+  /**
+   * How many cards need attention today.
    *
    * An input because only the dashboard has counted them — the shell has no
-   * business loading the register just to draw a number.
+   * business loading the register just to draw a number. No longer drives the
+   * bell: that now counts unread notifications, which is what the page it opens
+   * actually shows.
    */
   readonly attentionCount = input(0);
 

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- Tints the status-bar icon and the app name in the notification shade.
+         The app's own violet, matching --myc-violet in src/styles/_theme.scss. -->
+    <color name="notification_accent">#7B2FF7</color>
+</resources>

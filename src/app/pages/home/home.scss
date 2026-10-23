@@ -8,26 +8,56 @@
   display: block;
 }
 
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+/// The "New — …" pill. It reads as one line or not at all: wrapped onto two it
+/// stops looking like a badge and starts looking like a paragraph in a box, so
+/// the type scales with the viewport instead of the text reflowing.
+.hero-badge {
+  max-width: 100%;
+  white-space: nowrap;
+  font-size: clamp(0.7rem, 2.6vw, 0.875rem);
+}
+
+/// Hero CTAs, kept side by side down to the narrowest phone. Same reasoning:
+/// stacked full-width pills read as a form to work through rather than two
+/// alternatives, and the primary one is what should be reachable first.
+.hero-cta {
+  white-space: nowrap;
+  font-size: clamp(0.8rem, 3.2vw, 1rem);
+  padding-inline: clamp(0.85rem, 4vw, 1.75rem);
+}
+
 // ── Hero card stack ──────────────────────────────────────────────────────────
 // Pure CSS so the hero costs no image requests. `--fan` controls how far the
 // back cards splay out, and shrinks with the viewport.
+//
+// Sized off the viewport rather than a fixed width: at 78vw the fanned-out
+// back cards ran off the screen edge on a phone and the stack swallowed the
+// fold. Everything inside the card scales from .card-art's own font-size, so
+// the art shrinks as one piece instead of keeping desktop-sized text on a
+// phone-sized card.
 
 .card-stack {
   position: relative;
-  height: clamp(15rem, 42vw, 21rem);
-  margin-top: clamp(2.5rem, 7vw, 4rem);
-  --fan: clamp(3.5rem, 13vw, 8.5rem);
+  height: clamp(11rem, 30vw, 17rem);
+  margin-top: clamp(2rem, 6vw, 4rem);
+  --fan: clamp(2.5rem, 11vw, 8.5rem);
 }
 
 .card-art {
   position: absolute;
   left: 50%;
   top: 0;
-  width: min(20rem, 78vw);
+  width: clamp(11rem, 55vw, 20rem);
   aspect-ratio: 1.586; // ISO/IEC 7810 ID-1, i.e. an actual card
   border-radius: var(--myc-radius);
   border: 1px solid var(--myc-glass-border);
   box-shadow: var(--myc-glass-shadow);
+  font-size: clamp(0.75rem, 2.6vw, 1rem);
+  // In `em`, not Bootstrap's p-3: a fixed 1rem gutter left the phone-sized
+  // card with barely any room for the four lines it carries.
+  padding: 1em;
 }
 
 .card-art--back {
@@ -69,7 +99,14 @@
   }
 }
 
+/// The customer name on the front card. In `em` so it tracks the card, which
+/// Bootstrap's .fs-5 (a fixed rem) did not.
+.card-art__name {
+  font-size: 1.25em;
+  font-weight: 700;
+}
+
 /// Card numbers and due dates — small, but below Bootstrap's .small (0.875em).
 .card-art__meta {
-  font-size: 0.8rem;
+  font-size: 0.8em;
 }

@@ -29,12 +29,33 @@ export const routes: Routes = [
     title: 'All cards — manageyourcard',
   },
   {
+    path: 'cards/:cardId',
+    // One card in full, with Call and Edit. Declared after 'cards' so the
+    // register listing is not swallowed by the parameter segment.
+    //
+    // A page rather than a dialog, because the dashboard's panels name a
+    // customer and carry no actions: tapping one has to land somewhere that
+    // does, and somewhere that survives a reload or a shared link.
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/card-detail/card-detail').then((m) => m.CardDetail),
+    title: 'Card — manageyourcard',
+  },
+  {
     path: 'history',
     // Cards the shop has finished with. Signed-in only, like the dashboard —
     // it is the same register, just the closed end of it.
     canActivate: [authGuard],
     loadComponent: () => import('./pages/history/history').then((m) => m.History),
     title: 'History — manageyourcard',
+  },
+  {
+    path: 'notifications',
+    // What the bell in the app bar opens: the reminders that have gone out.
+    // A record rather than a delivery — see ./shared/inbox.
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/notifications/notifications').then((m) => m.Notifications),
+    title: 'Notifications — manageyourcard',
   },
   {
     path: 'profile',

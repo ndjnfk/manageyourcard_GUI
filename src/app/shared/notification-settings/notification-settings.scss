@@ -1,0 +1,116 @@
+// Reminder settings. Only what is particular to this panel — the glass shell,
+// the switch, the inputs and the buttons are all global in
+// src/styles/_theme.scss.
+
+:host {
+  display: block;
+}
+
+.notify__heading {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--myc-text);
+}
+
+.notify__sub {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/// One setting: its control, then the line explaining it.
+.notify__row + .notify__row {
+  margin-top: 1.25rem;
+}
+
+.notify__label {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  color: var(--myc-text);
+}
+
+/// The line under a control. Indented to line up with the switch's label
+/// rather than its track, so the explanation reads as belonging to the words
+/// beside it and not to the control itself.
+.notify__help {
+  margin-top: 0.4rem;
+  margin-left: 3.5rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--myc-text-muted);
+}
+
+/// The iOS caveat. Full width rather than indented — it is about the platform,
+/// not about the switch above it.
+.notify__note {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--myc-glass-border);
+  border-radius: var(--myc-radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: var(--myc-text-muted);
+}
+
+.notify__divider {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--myc-glass-border);
+  opacity: 1;
+}
+
+.notify__subheading {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--myc-text-faint);
+}
+
+/// Constrained so the select does not stretch to the panel's full width — a
+/// control much wider than its longest option reads as an input you can type
+/// into rather than a list you pick from.
+.notify__select {
+  max-width: 22rem;
+}
+
+.notify__devices {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notify__device {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--myc-glass-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.notify__device-name {
+  font-size: 0.88rem;
+  color: var(--myc-text);
+}
+
+.notify__device-meta {
+  flex-shrink: 0;
+  font-size: 0.76rem;
+  color: var(--myc-text-faint);
+}
+
+/// The help line sits under the switch's label on wide screens, but on a narrow
+/// one the indent wastes most of the row.
+@media (max-width: 30rem) {
+  .notify__help {
+    margin-left: 0;
+  }
+}

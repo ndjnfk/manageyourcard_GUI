@@ -13,7 +13,12 @@ import { ApiError } from '../../shared/api';
 import { AppShell } from '../../shared/app-shell/app-shell';
 import { Card, Cards } from '../../shared/cards';
 
-/** A completed card with the bits the list needs worked out. */
+/**
+ * A card that has left the register, with the bits the list needs worked out.
+ *
+ * Two kinds land here: cards the shopkeeper closed, and cards whose expiry ran
+ * out and whose day of grace on the dashboard is over.
+ */
 interface HistoryCard {
   readonly cardId: string;
   readonly cardNumber: string;
@@ -23,6 +28,9 @@ interface HistoryCard {
   readonly issued: Date | null;
   readonly due: Date | null;
   readonly completed: Date | null;
+  /** Came here by expiring rather than by being closed. */
+  readonly expired: boolean;
+  readonly expiry: Date | null;
   /** 0 if it was never renewed before being closed. */
   readonly renewalCount: number;
   /** When it was last renewed, or null if it never was. */
@@ -95,6 +103,16 @@ export class History {
       due: parseCalendarDate(card.dueDate),
       // An ISO timestamp, not a calendar date — the moment it was closed.
       completed: card.completedAt ? new Date(card.completedAt) : null,
+      /**
+       * Whether the card came here by expiring rather than by being closed.
+       *
+       * This page holds both now, and they arrived for opposite reasons: one
+       * because the shopkeeper finished the work, the other because nobody got
+       * to it in time. Calling the second one "Completed" — which is what a
+       * single hardcoded badge did — reads as a job well done.
+       */
+      expired: card.completedAt === null,
+      expiry: parseCalendarDate(card.expiryDate),
       renewalCount: card.renewalCount,
       renewedOn: card.renewedAt ? new Date(card.renewedAt) : null,
       initials: initialsOf(card.customerName),

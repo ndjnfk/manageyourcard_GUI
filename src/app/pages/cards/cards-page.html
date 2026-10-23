@@ -114,7 +114,10 @@
 
       <ul class="cards__list list-unstyled m-0">
         @for (card of rows(); track card.cardId) {
-          <li class="myc-glass cards__row d-flex flex-wrap align-items-center gap-3 p-3 p-lg-4">
+          <li
+            class="myc-glass cards__row d-flex flex-wrap align-items-center gap-3 p-3 p-lg-4"
+            [class.myc-card-expired]="card.expired"
+          >
             <span
               class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center small fw-semibold flex-shrink-0"
               aria-hidden="true"
@@ -123,7 +126,17 @@
             </span>
 
             <div class="cards__who flex-grow-1 min-w-0">
-              <p class="fw-semibold m-0 text-truncate">{{ card.customer }}</p>
+              <!-- Opens the card's own page — the row shows a summary, the
+                   page shows everything, with Call and Edit on it. -->
+              <p class="fw-semibold m-0 text-truncate">
+                <a
+                  class="myc-name-link"
+                  [attr.aria-label]="'Open card ' + card.cardNumber + ' for ' + card.customer"
+                  [routerLink]="['/cards', card.cardId]"
+                >
+                  {{ card.customer }}
+                </a>
+              </p>
               @if (card.renewalCount) {
                 <p class="cards__renewed d-inline-flex align-items-center gap-1 mt-1 mb-0">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -161,18 +174,38 @@
                 </svg>
                 <span class="visually-hidden">Call {{ card.customer }}</span>
               </a>
-              <button
-                type="button"
-                class="myc-btn-primary myc-btn-sm"
-                [attr.aria-label]="'Edit card ' + card.cardNumber + ' for ' + card.customer"
-                (click)="openEdit(card.cardId)"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
-                  <path d="M14.5 6.5 17.5 9.5" />
-                </svg>
-                Edit
-              </button>
+              <!-- No Edit on an expired card, matching the dashboard: renewing
+                   it would not revive it, since expiry outranks the due date.
+                   This also removes the only way to mark it Completed. -->
+              @if (card.expired) {
+                <!-- Details in Edit's place: the row is still worth reading
+                     even though nothing on it can be changed. -->
+                <button
+                  type="button"
+                  class="myc-btn-ghost myc-btn-sm"
+                  [attr.aria-label]="'Details of card ' + card.cardNumber + ' for ' + card.customer"
+                  (click)="openDetails(card.cardId)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 11v5M12 7.6v.6" />
+                  </svg>
+                  Details
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="myc-btn-primary myc-btn-sm"
+                  [attr.aria-label]="'Edit card ' + card.cardNumber + ' for ' + card.customer"
+                  (click)="openEdit(card.cardId)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
+                    <path d="M14.5 6.5 17.5 9.5" />
+                  </svg>
+                  Edit
+                </button>
+              }
             </div>
           </li>
         }
@@ -232,3 +265,5 @@
      backdrop-filter on an ancestor would become its containing block and clip
      it to the page. -->
 <app-edit-card (saved)="onCardSaved()" />
+<!-- No output: it only reads. -->
+<app-card-details />

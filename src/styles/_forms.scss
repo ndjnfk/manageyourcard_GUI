@@ -1,0 +1,196 @@
+// Fields, inputs, labels, the password eye and the filter chips.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.myc-field {
+  @include glass(var(--myc-glass-bg), var(--myc-radius-pill));
+  padding: 0.5rem 1rem;
+  color: var(--myc-text-faint);
+  box-shadow: none;
+
+  &:focus-within {
+    border-color: var(--myc-glass-border-lit);
+  }
+}
+
+.myc-field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 1.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--myc-text);
+  // Must stay at 16px: anything smaller makes iOS Safari zoom the page in on
+  // focus, and it stays scaled up afterwards.
+  font-size: 1rem;
+
+  &::placeholder {
+    color: var(--myc-text-faint);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  // The UA clear button is a dark bitmap — invisible on this canvas.
+  &::-webkit-search-cancel-button {
+    filter: invert(1);
+    opacity: 0.5;
+  }
+}
+
+/// Stacked form control — a labelled box field, for forms proper (register,
+/// sign in, add a card). .myc-field above is the pill-shaped search variant;
+/// this is the one that goes under a .myc-label.
+.myc-input {
+  @include glass(var(--myc-glass-bg), var(--myc-radius-sm));
+  display: block;
+  width: 100%;
+  min-height: 2.75rem; // 44px — comfortable touch target
+  padding: 0.6rem 0.9rem;
+  color: var(--myc-text);
+  // Must stay at 16px: anything smaller makes iOS Safari zoom the page in on
+  // focus, and it stays scaled up afterwards.
+  font-size: 1rem;
+  box-shadow: none;
+
+  &::placeholder {
+    color: var(--myc-text-faint);
+  }
+
+  &:focus {
+    outline: none; // replaced by the ring below, which reads better on glass
+    border-color: var(--myc-glass-border-lit);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+  }
+}
+
+/// Set once a field has failed validation *and* the user has been shown it —
+/// never while they are still typing their first attempt.
+.myc-input--invalid {
+  border-color: rgba(255, 77, 109, 0.65);
+
+  &:focus {
+    border-color: var(--myc-red);
+    box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.2);
+  }
+}
+
+.myc-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--myc-text-muted);
+}
+
+/// Password field with a show/hide eye. Wrap the input:
+///   <div class="myc-pw">
+///     <input class="myc-input myc-pw__input" type="password">
+///     <button class="myc-pw__toggle" type="button">…eye…</button>
+///   </div>
+.myc-pw {
+  position: relative;
+}
+
+/// Keeps typing clear of the button rather than running underneath it.
+.myc-pw__input {
+  padding-right: 3.1rem;
+}
+
+/// Full height of the field, so it is a 44px target on a phone without
+/// needing a size of its own.
+.myc-pw__toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 100%;
+  border: 0;
+  border-radius: var(--myc-radius-sm);
+  background: none;
+  color: var(--myc-text-faint);
+  transition: color 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--myc-text);
+    }
+  }
+
+  &:focus-visible {
+    color: var(--myc-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myc-pw__toggle {
+    transition: none;
+  }
+}
+
+/// Filter chip. Put a row of them in a .myc-chip-rail so they scroll sideways
+/// on a phone instead of wrapping to three lines.
+.myc-chip {
+  flex: 0 0 auto;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--myc-glass-border);
+  border-radius: var(--myc-radius-pill);
+  background: var(--myc-glass-bg);
+  color: var(--myc-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+
+  // Behind (hover: hover) so it never latches on touch, where :hover sticks
+  // until the next tap somewhere else.
+  @media (hover: hover) {
+    &:hover {
+      color: var(--myc-text);
+      border-color: var(--myc-glass-border-lit);
+    }
+  }
+}
+
+.myc-chip--on {
+  background: var(--myc-gradient-primary);
+  border-color: transparent;
+  color: var(--myc-text);
+  box-shadow: var(--myc-glow-violet);
+}
+
+.myc-chip-rail {
+  overflow-x: auto;
+  scrollbar-width: none;
+  // Bleed to the screen edges so the row visibly runs past the fold.
+  margin-inline: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+  padding-inline: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 992px) {
+    flex-wrap: wrap;
+    overflow: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+/// Primary CTA — the glowing pill from the reference.

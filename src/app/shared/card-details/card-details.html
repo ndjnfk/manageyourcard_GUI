@@ -1,0 +1,139 @@
+<!-- Card details — everything on one card, read-only.
+
+     Opened from a card that has expired, which no longer has an Edit button to
+     show its record through. Nothing here is an input: there is no form and
+     nothing to save, so Escape and the backdrop close it freely.
+
+     Same native <dialog> shell as the add and edit forms (.myc-dialog in
+     src/styles/_theme.scss): sheet on a phone, centred card from sm up, with a
+     fixed head and foot around a scrolling body. -->
+<dialog
+  #dialog
+  class="myc-dialog"
+  aria-labelledby="card-details-title"
+  (close)="onClose()"
+  (click)="onBackdropClick($event)"
+>
+  @if (card(); as card) {
+    <div class="myc-dialog__panel">
+      <!-- ── Header ───────────────────────────────────────────────────── -->
+      <header class="myc-dialog__head d-flex align-items-start justify-content-between gap-3">
+        <div class="min-w-0">
+          <p class="myc-eyebrow mb-1">Card {{ card.cardNumber }}</p>
+          <h2 class="myc-dialog__title m-0" id="card-details-title">{{ card.customerName }}</h2>
+        </div>
+        <button
+          type="button"
+          class="myc-btn-ghost myc-btn-sm flex-shrink-0"
+          aria-label="Close details"
+          (click)="close()"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6 18 18M18 6 6 18" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ── Body ─────────────────────────────────────────────────────── -->
+      <div class="myc-dialog__body">
+        <dl class="mb-0">
+          <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+            <dt class="fw-normal text-body-secondary">Card number</dt>
+            <dd class="m-0 text-end fw-semibold">{{ card.cardNumber }}</dd>
+          </div>
+
+          <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+            <dt class="fw-normal text-body-secondary">Customer</dt>
+            <dd class="m-0 text-end fw-semibold">{{ card.customerName }}</dd>
+          </div>
+
+          <!-- A link, not text: on a phone this is the whole point of storing
+               the number, and a details panel you cannot call from would send
+               the shopkeeper back to the card to press Call. -->
+          <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+            <dt class="fw-normal text-body-secondary">Mobile</dt>
+            <dd class="m-0 text-end">
+              <a class="fw-semibold text-decoration-none" [href]="'tel:' + card.customerMobile">
+                {{ card.customerMobile }}
+              </a>
+            </dd>
+          </div>
+
+          @if (dates(); as dates) {
+            @if (dates.issued) {
+              <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+                <dt class="fw-normal text-body-secondary">Issued</dt>
+                <dd class="m-0 text-end">{{ dates.issued | date: 'd MMM y' }}</dd>
+              </div>
+            }
+
+            @if (dates.due) {
+              <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+                <dt class="fw-normal text-body-secondary">Due</dt>
+                <dd class="m-0 text-end">{{ dates.due | date: 'd MMM y' }}</dd>
+              </div>
+            }
+
+            <!-- Said either way. "No expiry" is a real and common state, and
+                 leaving the row out entirely reads as missing information
+                 rather than as an answer. -->
+            <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+              <dt class="fw-normal text-body-secondary">Expires</dt>
+              <dd class="m-0 text-end">
+                @if (dates.expiry) {
+                  {{ dates.expiry | date: 'd MMM y' }}
+                } @else {
+                  <span class="text-body-tertiary">No expiry</span>
+                }
+              </dd>
+            </div>
+
+            @if (dates.renewed) {
+              <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+                <dt class="fw-normal text-body-secondary">Last renewed</dt>
+                <dd class="m-0 text-end">
+                  {{ dates.renewed | date: 'd MMM y' }}
+                  @if (card.renewalCount > 1) {
+                    <span class="text-body-tertiary">· {{ card.renewalCount }}×</span>
+                  }
+                </dd>
+              </div>
+            }
+
+            @if (dates.completed) {
+              <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+                <dt class="fw-normal text-body-secondary">Closed</dt>
+                <dd class="m-0 text-end">{{ dates.completed | date: 'd MMM y' }}</dd>
+              </div>
+            }
+          }
+
+          <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+            <dt class="fw-normal text-body-secondary">Status</dt>
+            <dd class="m-0 text-end fw-semibold">{{ card.status }}</dd>
+          </div>
+
+          <!-- Full width and last, because a note is prose rather than a fact:
+               squeezed into the right-hand column of a two-column row it would
+               wrap into an unreadable ribbon. -->
+          <div class="pt-3">
+            <dt class="fw-normal text-body-secondary mb-1">Note</dt>
+            <dd class="m-0">
+              @if (card.notes) {
+                <p class="m-0 lh-base">{{ card.notes }}</p>
+              } @else {
+                <span class="text-body-tertiary">No note on this card</span>
+              }
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- ── Footer ───────────────────────────────────────────────────── -->
+      <footer class="myc-dialog__foot d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+        <a class="myc-btn-ghost" [href]="'tel:' + card.customerMobile">Call {{ card.customerName }}</a>
+        <button type="button" class="myc-btn-primary" (click)="close()">Done</button>
+      </footer>
+    </div>
+  }
+</dialog>

@@ -1,0 +1,74 @@
+// Design tokens — every colour, radius, blur and shadow in the theme.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+:root {
+  // --- Canvas --------------------------------------------------------------
+  // Base is almost black with an indigo cast; "raised" is for sheets/sections
+  // that sit above the canvas without being glass.
+  --myc-bg: #0a0518;
+  --myc-bg-raised: #140b2e;
+  --myc-bg-sunken: #060312;
+
+  // --- Brand ---------------------------------------------------------------
+  // Violet is the workhorse (primary buttons, active states); magenta is the
+  // hot end of every gradient; blue-violet is the cool end.
+  --myc-violet: #7b2ff7;
+  --myc-violet-bright: #a855f7;
+  --myc-magenta: #c13af5;
+  --myc-pink: #e879f9;
+  --myc-indigo: #6c4dff;
+
+  // --- Functional accents --------------------------------------------------
+  // Pulled from the action-row icons in the reference (freeze / info / config).
+  --myc-cyan: #35d6f0; // "frozen", info, neutral-positive
+  --myc-teal: #3dd9c0; // success, goal reached
+  --myc-amber: #f5a623; // settings, warning
+  --myc-red: #ff4d6d; // destructive, overspend
+
+  // --- Text ----------------------------------------------------------------
+  // Never flat grey text on this canvas — white at decreasing alpha so it
+  // picks up the glow behind it.
+  --myc-text: #ffffff;
+  --myc-text-muted: rgba(255, 255, 255, 0.64);
+  --myc-text-faint: rgba(255, 255, 255, 0.38);
+
+  // --- Glass ---------------------------------------------------------------
+  // The signature surface: barely-there white fill + a brighter hairline
+  // border + heavy backdrop blur. The border is what sells it, not the fill.
+  --myc-glass-bg: rgba(255, 255, 255, 0.06);
+  --myc-glass-bg-strong: rgba(255, 255, 255, 0.1);
+  --myc-glass-border: rgba(255, 255, 255, 0.12);
+  --myc-glass-border-lit: rgba(168, 85, 247, 0.55); // neon edge, e.g. selected card
+  --myc-glass-blur: 20px;
+  --myc-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+  // --- Gradients -----------------------------------------------------------
+  --myc-gradient-primary: linear-gradient(135deg, #c13af5 0%, #7b2ff7 100%);
+  --myc-gradient-cool: linear-gradient(135deg, #6c4dff 0%, #a855f7 100%);
+  --myc-gradient-wave: linear-gradient(180deg, #7b2ff7 0%, #e879f9 100%);
+  --myc-gradient-text: linear-gradient(90deg, #ffffff 0%, #d8b4fe 100%);
+
+  // --- Glow ----------------------------------------------------------------
+  --myc-glow-violet: 0 0 24px rgba(123, 47, 247, 0.55);
+  --myc-glow-magenta: 0 0 24px rgba(193, 58, 245, 0.5);
+
+  // --- Shape ---------------------------------------------------------------
+  // Generous radii — nothing in this theme is sharper than 12px.
+  --myc-radius-sm: 12px;
+  --myc-radius: 20px;
+  --myc-radius-lg: 28px;
+  --myc-radius-pill: 999px;
+
+  // --- Layout --------------------------------------------------------------
+  --myc-nav-height: 4rem;
+  --myc-section-gap: clamp(3.5rem, 8vw, 7rem); // vertical rhythm between sections
+}
+
+// -----------------------------------------------------------------------------
+// Opt-in utility classes
+// -----------------------------------------------------------------------------

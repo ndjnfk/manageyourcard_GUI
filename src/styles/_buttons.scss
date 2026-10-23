@@ -1,0 +1,114 @@
+// Buttons and icon actions.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.myc-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem; // 44px — comfortable touch target
+  background: var(--myc-gradient-primary);
+  color: var(--myc-text);
+  border: 0;
+  border-radius: var(--myc-radius-pill);
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--myc-glow-violet);
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--myc-text);
+    filter: brightness(1.08);
+    box-shadow: var(--myc-glow-magenta);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/// Compact variant of either button — nav bars, toolbars, card footers.
+.myc-btn-sm {
+  min-height: 2.5rem;
+  padding: 0.5rem 1.15rem;
+  font-size: 0.925rem;
+}
+
+/// Secondary CTA — outlined glass.
+.myc-btn-ghost {
+  @include glass(var(--myc-glass-bg), var(--myc-radius-pill));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--myc-text);
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--myc-text);
+    border-color: var(--myc-glass-border-lit);
+  }
+}
+
+/// Circular icon action (the row under the balance in the reference).
+.myc-icon-action {
+  @include glass(transparent, var(--myc-radius-pill));
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--myc-text);
+  box-shadow: none;
+  // Used on <a> as well as <button> — the bell in the app bar is a link to the
+  // notifications page. Without this an anchor brings its underline with it.
+  text-decoration: none;
+
+  &.is-active {
+    background: var(--myc-gradient-cool);
+    border-color: transparent;
+    box-shadow: var(--myc-glow-violet);
+  }
+}
+
+// =============================================================================
+// Modal dialog
+// -----------------------------------------------------------------------------
+// Built on the native <dialog> element, which supplies focus trapping, Escape
+// to close, inertness of the page behind and the ::backdrop. Bootstrap's JS is
+// not loaded in this project, so its modal was never an option — and a native
+// dialog gets all four of those right, which a bespoke overlay rarely does.
+//
+// Centred in the viewport at every size. The height is capped and only the
+// body scrolls, between a fixed head and foot — so the primary action is
+// always on screen, including on a phone held in landscape where a form is
+// taller than the viewport.
+//
+// Note the explicit width/height on .myc-dialog: the UA stylesheet sets
+// `fit-content` on both, and an explicit size beats `inset: 0`. Without them
+// the element shrinks to its contents and there is nothing for align-items to
+// centre within, which pins the card to the top of the screen.
+//
+//   <dialog class="myc-dialog">
+//     <form class="myc-dialog__panel">
+//       <header class="myc-dialog__head"><h2 class="myc-dialog__title">…</h2></header>
+//       <div class="myc-dialog__body">…</div>
+//       <footer class="myc-dialog__foot">…</footer>
+//     </form>
+//   </dialog>
+// =============================================================================

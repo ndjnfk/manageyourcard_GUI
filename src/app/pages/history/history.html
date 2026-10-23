@@ -142,7 +142,14 @@
                       {{ card.cardNumber }}@if (card.notes) { · {{ card.notes }} }
                     </p>
                   </div>
-                  <span class="badge rounded-pill flex-shrink-0 text-bg-success">Completed</span>
+                  <!-- Both kinds of card live on this page and they arrived for
+                       opposite reasons — one finished, one missed. One badge
+                       for both would congratulate the shopkeeper either way. -->
+                  @if (card.expired) {
+                    <span class="badge rounded-pill flex-shrink-0 myc-badge-expired">Expired</span>
+                  } @else {
+                    <span class="badge rounded-pill flex-shrink-0 text-bg-success">Completed</span>
+                  }
                 </div>
 
                 <dl class="history__facts mt-3 pt-3 mb-0 border-top">
@@ -150,6 +157,15 @@
                     <div class="d-flex justify-content-between gap-3 py-1">
                       <dt class="fw-normal text-body-secondary">Closed</dt>
                       <dd class="m-0 text-end">{{ card.completed | date: 'd MMM y' }}</dd>
+                    </div>
+                  }
+                  <!-- An expired card has no closing date to show, so it says
+                       when it ran out instead. Without this the card would be
+                       here with nothing explaining why. -->
+                  @if (card.expired && card.expiry) {
+                    <div class="d-flex justify-content-between gap-3 py-1">
+                      <dt class="fw-normal text-body-secondary">Expired</dt>
+                      <dd class="m-0 text-end">{{ card.expiry | date: 'd MMM y' }}</dd>
                     </div>
                   }
                   @if (card.issued) {

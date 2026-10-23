@@ -10,9 +10,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged, map, merge, switchMap } from 'rxjs';
+import { RouterLink } from '@angular/router';
 import { ApiError } from '../../shared/api';
 import { AppShell } from '../../shared/app-shell/app-shell';
 import { Card, CardFilter, Cards } from '../../shared/cards';
+import { CardDetails } from '../../shared/card-details/card-details';
 import { EditCard } from '../dashboard/edit-card/edit-card';
 
 /** How many rows a page holds. Two full columns on a laptop, a scroll on a phone. */
@@ -32,6 +34,36 @@ const STATUS_META: Readonly<Record<string, StatusMeta>> = {
   Completed: { label: 'Completed', tone: 'text-info', badge: 'text-bg-info' },
 };
 
+/**
+ * The muted look for a card whose own expiry has passed.
+ *
+ * The API reports one `Expired` status for two different situations — a due
+ * date gone by, and an expiry gone by — so the table above cannot tell them
+ * apart on its own. Only the second is finished: a card past its due date is
+ * *overdue* and is exactly what the shopkeeper should be chasing, which is why
+ * it keeps the red. Matches the dashboard, so the same card cannot be labelled
+ * two different things on two pages.
+ */
+const EXPIRED_META: StatusMeta = {
+  label: 'Expired',
+  tone: 'myc-text-expired',
+  badge: 'myc-badge-expired',
+};
+
+/** Midnight today, for comparing against a card's expiry. */
+function startOfToday(): Date {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return now;
+}
+
+/** Whether this card's expiry has passed — strictly, so the day itself counts. */
+function hasExpired(card: Card, today: Date): boolean {
+  const expiry = parseCalendarDate(card.expiryDate);
+
+  return expiry !== null && expiry.getTime() < today.getTime();
+}
+
 /** A card with everything the row needs worked out. */
 interface CardRow {
   readonly cardId: string;
@@ -43,6 +75,8 @@ interface CardRow {
   readonly renewalCount: number;
   readonly renewedOn: Date | null;
   readonly meta: StatusMeta;
+  /** Expiry gone by — dimmed, and with no Edit. See the dashboard for why. */
+  readonly expired: boolean;
   readonly initials: string;
 }
 
@@ -83,7 +117,7 @@ function initialsOf(name: string): string {
  */
 @Component({
   selector: 'app-cards-page',
-  imports: [AppShell, DatePipe, EditCard],
+  imports: [AppShell, CardDetails, DatePipe, EditCard, RouterLink],
   templateUrl: './cards-page.html',
   styleUrl: './cards-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +127,9 @@ export class CardsPage {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly editCard = viewChild.required(EditCard);
+
+  /** The read-only details dialog, for rows that no longer have an Edit. */
+  private readonly cardDetails = viewChild.required(CardDetails);
 
   protected readonly query = signal('');
   protected readonly filter = signal<CardFilter>('all');
@@ -110,25 +147,38 @@ export class CardsPage {
     { key: 'all', label: 'All cards' },
     { key: 'today', label: 'Due today' },
     { key: 'week', label: 'This week' },
-    { key: 'expired', label: 'Overdue' },
+    // Two chips, not one. "Overdue" is now only cards whose renewal date has
+    // gone by and which can still be renewed — the ones worth a phone call.
+    // Expired cards have their own chip because nothing can be done about them,
+    // and leaving them in with the rest made the chase list look longer than
+    // the work actually was.
+    { key: 'overdue', label: 'Overdue' },
+    { key: 'expired', label: 'Expired' },
     { key: 'active', label: 'Active' },
   ];
 
-  protected readonly rows = computed<readonly CardRow[]>(() =>
-    this.cards().map((card) => ({
-      cardId: card.cardId,
-      cardNumber: card.cardNumber,
-      customer: card.customerName,
-      mobile: card.customerMobile,
-      notes: card.notes,
-      due: parseCalendarDate(card.dueDate),
-      renewalCount: card.renewalCount,
-      // An ISO timestamp, not a calendar date — new Date() is right here.
-      renewedOn: card.renewedAt ? new Date(card.renewedAt) : null,
-      meta: STATUS_META[card.status] ?? STATUS_META['Active'],
-      initials: initialsOf(card.customerName),
-    })),
-  );
+  protected readonly rows = computed<readonly CardRow[]>(() => {
+    const today = startOfToday();
+
+    return this.cards().map((card) => {
+      const expired = hasExpired(card, today);
+
+      return {
+        cardId: card.cardId,
+        cardNumber: card.cardNumber,
+        customer: card.customerName,
+        mobile: card.customerMobile,
+        notes: card.notes,
+        due: parseCalendarDate(card.dueDate),
+        renewalCount: card.renewalCount,
+        // An ISO timestamp, not a calendar date — new Date() is right here.
+        renewedOn: card.renewedAt ? new Date(card.renewedAt) : null,
+        meta: expired ? EXPIRED_META : (STATUS_META[card.status] ?? STATUS_META['Active']),
+        expired,
+        initials: initialsOf(card.customerName),
+      };
+    });
+  });
 
   /** "Showing 13–24 of 57" — the first index on this page, 1-based. */
   protected readonly firstShown = computed(() =>
@@ -233,6 +283,14 @@ export class CardsPage {
     if (!card) return;
 
     this.editCard().open(card);
+  }
+
+  /** Everything on a card, read-only — what an expired row offers in place of Edit. */
+  protected openDetails(cardId: string): void {
+    const card = this.cards().find((entry) => entry.cardId === cardId);
+    if (!card) return;
+
+    this.cardDetails().open(card);
   }
 
   /**

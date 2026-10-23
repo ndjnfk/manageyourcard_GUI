@@ -1,0 +1,105 @@
+<!-- The shop's notifications — what the bell in the app bar opens.
+
+     Wrapped in the shared signed-in chrome, so the app bar, tab bar and drawer
+     are the same here as everywhere else behind the guard. -->
+<app-shell>
+  <div class="notif__col mx-auto">
+    <header class="d-flex align-items-start justify-content-between gap-3 mb-4">
+      <div>
+        <p class="myc-eyebrow mb-2">Notifications</p>
+        <h1 class="myc-title m-0">
+          What needs <span class="myc-title-accent">your attention</span>
+        </h1>
+        <p class="mt-2 mb-0 text-body-secondary">
+          @if (unread() > 0) {
+            {{ unread() }} unread.
+          } @else {
+            Reminders about cards falling due, newest first.
+          }
+        </p>
+      </div>
+
+      @if (unread() > 0) {
+        <button type="button" class="myc-btn-ghost myc-btn-sm flex-shrink-0" (click)="markAllRead()">
+          Mark all read
+        </button>
+      }
+    </header>
+
+    @if (loading() && notifications().length === 0) {
+      <p class="text-body-secondary" role="status">
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        Loading…
+      </p>
+    } @else if (loadError(); as message) {
+      <section class="myc-glass p-4 text-center" role="alert">
+        <p class="mb-3 text-danger">{{ message }}</p>
+        <button type="button" class="myc-btn-ghost myc-btn-sm" (click)="reload()">Try again</button>
+      </section>
+    } @else if (isEmpty()) {
+      <!-- Not an error, and worth saying warmly: an empty list here means
+           nothing is overdue, which is the state the whole app is aiming at. -->
+      <section class="myc-glass notif__empty p-5 text-center">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.4" stroke-linejoin="round" class="notif__empty-icon mb-3" aria-hidden="true">
+          <path d="M6.5 9a5.5 5.5 0 0 1 11 0v4l1.8 3H4.7l1.8-3z" />
+          <path d="M10 19.5a2.2 2.2 0 0 0 4 0" stroke-linecap="round" />
+        </svg>
+        <p class="fw-semibold mb-1">You're all caught up</p>
+        <p class="text-body-secondary small m-0">
+          Nothing is due right now. Reminders appear here as cards approach their due dates.
+        </p>
+      </section>
+    } @else {
+      <ul class="notif__list">
+        @for (notification of notifications(); track notification.id) {
+          <!-- A button, not a div with a click handler: this is an action, and
+               it has to be reachable and operable from the keyboard. -->
+          <li>
+            <button
+              type="button"
+              class="notif__item"
+              [class.notif__item--unread]="!notification.read"
+              [attr.data-tone]="tone(notification)"
+              (click)="open(notification)"
+            >
+              <span class="notif__dot" aria-hidden="true"></span>
+
+              <span class="notif__body">
+                <span class="notif__title">
+                  {{ notification.title }}
+                  @if (!notification.read) {
+                    <span class="visually-hidden">(unread)</span>
+                  }
+                </span>
+                <span class="notif__text">{{ notification.body }}</span>
+
+                @if (notification.counts; as counts) {
+                  <span class="notif__chips">
+                    <!-- Expired first, and worded as its own thing. It used to
+                         be counted among "overdue", which told the shopkeeper
+                         to chase a card that cannot be renewed at all. -->
+                    @if (counts.expired) {
+                      <span class="notif__chip notif__chip--expired">{{ counts.expired }} expired</span>
+                    }
+                    @if (counts.overdue > 0) {
+                      <span class="notif__chip notif__chip--overdue">{{ counts.overdue }} overdue</span>
+                    }
+                    @if (counts.dueToday > 0) {
+                      <span class="notif__chip notif__chip--today">{{ counts.dueToday }} due today</span>
+                    }
+                    @if (counts.dueSoon > 0) {
+                      <span class="notif__chip notif__chip--soon">{{ counts.dueSoon }} due soon</span>
+                    }
+                  </span>
+                }
+              </span>
+
+              <span class="notif__when">{{ when(notification) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</app-shell>

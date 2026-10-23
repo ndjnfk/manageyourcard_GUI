@@ -1,12 +1,4 @@
-import { DOCUMENT } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Logo } from '../../shared/logo/logo';
 
@@ -41,64 +33,25 @@ interface SampleCard {
   readonly tone: string;
 }
 
-interface Testimonial {
-  readonly name: string;
-  readonly shop: string;
-  readonly quote: string;
-  /** Initials stand in for an avatar — no external image requests. */
-  readonly initials: string;
-}
-
 @Component({
   selector: 'app-home',
   imports: [Logo, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:keydown.escape)': 'closeMenu()',
-  },
 })
 export class Home {
   protected readonly year = new Date().getFullYear();
 
   /**
-   * Mobile nav state. Angular owns this rather than Bootstrap's collapse
-   * data-api: the app has no other need for Bootstrap's JavaScript, and letting
-   * a script outside Angular mutate classes on a template-owned element is the
-   * kind of thing that silently stops working. Toggling `.show` is all the
-   * data-api did anyway — the collapse itself is pure CSS.
+   * Shown inline in the bar from lg up only. Phones get a Sign in button in
+   * place of a menu — nobody is signed in here, and every one of these links
+   * is a scroll away on the same page.
    */
-  protected readonly menuOpen = signal(false);
-
-  private readonly document = inject(DOCUMENT);
-
-  constructor() {
-    // Stop the page behind the drawer from scrolling — without this, dragging
-    // over the backdrop scrolls the landing page underneath it.
-    effect(() => {
-      this.document.body.classList.toggle('myc-no-scroll', this.menuOpen());
-    });
-
-    // Leaving the route with the drawer open would otherwise strand the lock.
-    inject(DestroyRef).onDestroy(() => {
-      this.document.body.classList.remove('myc-no-scroll');
-    });
-  }
-
-  protected toggleMenu(): void {
-    this.menuOpen.update((open) => !open);
-  }
-
-  protected closeMenu(): void {
-    this.menuOpen.set(false);
-  }
-
   protected readonly navLinks = [
     { label: 'Features', href: '#features' },
     { label: 'How it works', href: '#how-it-works' },
     { label: 'Due dates', href: '#due-dates' },
-    { label: 'Reviews', href: '#reviews' },
   ];
 
   /**
@@ -199,30 +152,6 @@ export class Home {
       due: '15 Aug 2026',
       status: 'Active',
       tone: 'text-bg-success',
-    },
-  ];
-
-  protected readonly testimonials: readonly Testimonial[] = [
-    {
-      name: 'Sunil Kumar',
-      shop: 'Mobile shop, Nagpur',
-      quote:
-        'Two hundred cards were in a diary and I was still missing renewals. Now the ones due this week are the first thing I see in the morning.',
-      initials: 'SK',
-    },
-    {
-      name: 'Farhana Sheikh',
-      shop: 'Electronics store, Hyderabad',
-      quote:
-        'A customer gives me a mobile number and the card comes up straight away. That search alone saved me the register.',
-      initials: 'FS',
-    },
-    {
-      name: 'Jagdish Patel',
-      shop: 'Service centre, Rajkot',
-      quote:
-        'I update the due date after every service and it sorts the status out itself. No red pen, no separate list of expired cards.',
-      initials: 'JP',
     },
   ];
 }

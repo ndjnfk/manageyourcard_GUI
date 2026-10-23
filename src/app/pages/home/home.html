@@ -1,6 +1,6 @@
 <!-- Landing page shown before a shopkeeper signs in. Sections:
-     hero → dashboard preview → features → how it works → due dates → reviews
-     → CTA → footer.
+     hero → dashboard preview → features → how it works → due dates → CTA
+     → footer.
 
      Layout, spacing and typography are Bootstrap utilities; the .myc-* classes
      are the shared theme pieces from src/styles/_theme.scss. This component's
@@ -18,8 +18,7 @@
           <app-logo />
         </a>
 
-        <!-- Desktop nav, inline in the bar. The mobile drawer is a separate
-             element outside this header — see the bottom of the file. -->
+        <!-- Desktop nav, inline in the bar. -->
         <div class="d-none d-lg-flex align-items-center flex-grow-1">
           <ul class="navbar-nav flex-row mx-auto mb-0">
             @for (link of navLinks; track link.href) {
@@ -34,16 +33,11 @@
           </div>
         </div>
 
-        <button
-          class="navbar-toggler d-lg-none border-0 px-2"
-          type="button"
-          aria-controls="landingNav"
-          [attr.aria-expanded]="menuOpen()"
-          aria-label="Open menu"
-          (click)="toggleMenu()"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
+        <!-- Phones get a single Sign in button rather than a menu. Nobody is
+             signed in on this page, so a drawer would only ever hold the same
+             section links the page itself scrolls through — the hamburger
+             belongs to the signed-in shell (app-shell), not here. -->
+        <a class="myc-btn-primary myc-btn-sm d-lg-none" routerLink="/login">Sign in</a>
       </div>
     </nav>
   </header>
@@ -53,10 +47,10 @@
     <section class="myc-section text-center" id="hero">
       <div class="container">
         <p
-          class="d-inline-flex align-items-center gap-2 mb-4 px-3 py-2 border rounded-pill myc-tint small text-body-secondary"
+          class="hero-badge d-inline-flex align-items-center gap-2 mb-4 px-3 py-2 border rounded-pill myc-tint text-body-secondary"
         >
           <span class="myc-dot text-success" aria-hidden="true"></span>
-          New — Notification reminders for cards due this week
+          New — Reminders for cards due this week
         </p>
 
         <h1 class="myc-title myc-title--hero m-0">
@@ -69,33 +63,33 @@
           what's due today, what's due this week and what's already overdue.
         </p>
 
-        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
-          <a class="myc-btn-primary" routerLink="/dashboard">Open your dashboard</a>
-          <a class="myc-btn-ghost" href="#how-it-works">See how it works</a>
+        <div class="d-flex flex-nowrap justify-content-center gap-2 gap-sm-3 mt-4">
+          <a class="myc-btn-primary hero-cta" routerLink="/dashboard">Open your dashboard</a>
+          <a class="myc-btn-ghost hero-cta" href="#how-it-works">See how it works</a>
         </div>
 
         <!-- Fanned card stack, pure CSS — no images to download. -->
         <div class="card-stack" aria-hidden="true">
-          <div class="card-art card-art--back d-flex flex-column p-3 text-start">
+          <div class="card-art card-art--back d-flex flex-column text-start">
             <span class="d-flex align-items-center gap-2 small">
               <i class="myc-dot text-danger"></i> C002 · Amit
             </span>
             <span class="mt-auto card-art__meta">Due 25 Jul 2026</span>
           </div>
-          <div class="card-art card-art--mid d-flex flex-column p-3 text-start">
+          <div class="card-art card-art--mid d-flex flex-column text-start">
             <span class="d-flex align-items-center gap-2 small">
               <i class="myc-dot text-success"></i> C003 · Priya
             </span>
             <span class="mt-auto card-art__meta">Due 15 Aug 2026</span>
           </div>
-          <div class="card-art card-art--front d-flex flex-column p-3 text-start">
+          <div class="card-art card-art--front d-flex flex-column text-start">
             <span class="d-flex justify-content-between align-items-center">
               <span class="fw-semibold">C001</span>
               <span class="bg-white bg-opacity-25 rounded-pill px-2 py-1 card-art__meta">
                 Due soon
               </span>
             </span>
-            <span class="fs-5 fw-bold mt-2">Rahul</span>
+            <span class="card-art__name mt-2">Rahul</span>
             <span class="card-art__meta opacity-75">+91 94XXX XXXXX</span>
             <span class="mt-auto card-art__meta">Due 30 Jul 2026</span>
           </div>
@@ -274,51 +268,6 @@
       </div>
     </section>
 
-    <!-- ── Reviews ────────────────────────────────────────────────────── -->
-    <section class="myc-section" id="reviews">
-      <div class="container">
-        <header class="myc-measure mx-auto mb-5 text-center">
-          <p class="myc-eyebrow mb-2">Reviews</p>
-          <h2 class="myc-title m-0">
-            What shopkeepers <span class="myc-title-accent">tell us</span>
-          </h2>
-          <p class="myc-measure-sm mx-auto mt-3 mb-0 text-body-secondary lh-base">
-            From shops that were running the whole thing out of a diary.
-          </p>
-        </header>
-
-        <!-- Swipeable rail on phones, plain 3-up grid from lg up. -->
-        <div class="myc-rail gap-3 gap-lg-4">
-          @for (review of testimonials; track review.name) {
-            <article class="myc-glass p-4 d-flex flex-column">
-              <div class="myc-stars d-flex gap-1" aria-label="Rated 5 out of 5">
-                @for (star of [1, 2, 3, 4, 5]; track star) {
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2.6l2.9 6 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5L2.6 9.5l6.5-.9z" />
-                  </svg>
-                }
-              </div>
-              <blockquote class="my-3 flex-grow-1 text-body-secondary lh-base">
-                {{ review.quote }}
-              </blockquote>
-              <footer class="d-flex align-items-center gap-3 mt-auto">
-                <span
-                  class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center small fw-semibold"
-                  aria-hidden="true"
-                >
-                  {{ review.initials }}
-                </span>
-                <span>
-                  <span class="d-block small fw-semibold">{{ review.name }}</span>
-                  <span class="d-block small text-body-tertiary">{{ review.shop }}</span>
-                </span>
-              </footer>
-            </article>
-          }
-        </div>
-      </div>
-    </section>
-
     <!-- ── Closing CTA ────────────────────────────────────────────────── -->
     <section class="myc-section">
       <div class="container">
@@ -347,14 +296,13 @@
           <app-logo size="sm" />
           <p class="small mt-2 mb-0 text-body-tertiary">Every card, every due date, one screen.</p>
         </div>
+        <!-- The section links are all one scroll away on this page, so the
+             footer only carries the two things it can't reach: the way in. -->
         <nav class="d-flex flex-wrap gap-3 gap-md-4" aria-label="Footer">
-          @for (link of navLinks; track link.href) {
-            <a class="small text-body-secondary text-decoration-none" [href]="link.href">
-              {{ link.label }}
-            </a>
-          }
-          <a class="small text-body-secondary text-decoration-none" href="#">Privacy</a>
-          <a class="small text-body-secondary text-decoration-none" href="#">Terms</a>
+          <a class="small text-body-secondary text-decoration-none" routerLink="/login">Login</a>
+          <a class="small text-body-secondary text-decoration-none" routerLink="/register">
+            Register
+          </a>
         </nav>
       </div>
       <p class="small mt-4 mb-0 text-body-tertiary">
@@ -363,45 +311,3 @@
     </div>
   </footer>
 </div>
-
-<!-- ── Mobile drawer ──────────────────────────────────────────────────────
-     Deliberately outside .myc-canvas: it is position:fixed, and both the
-     sticky header's backdrop-filter and the canvas's overflow clipping would
-     otherwise confine it. Being fixed is also what stops it from pushing the
-     page down the way the old dropdown did. -->
-<div
-  class="offcanvas-backdrop fade d-lg-none"
-  [class.show]="menuOpen()"
-  aria-hidden="true"
-  (click)="closeMenu()"
-></div>
-
-<aside
-  class="offcanvas offcanvas-end myc-drawer d-lg-none"
-  id="landingNav"
-  tabindex="-1"
-  aria-label="Menu"
-  [class.show]="menuOpen()"
->
-  <div class="offcanvas-header border-bottom">
-    <app-logo size="sm" />
-    <button type="button" class="btn-close" aria-label="Close menu" (click)="closeMenu()"></button>
-  </div>
-  <div class="offcanvas-body d-flex flex-column">
-    <ul class="navbar-nav flex-column mb-4">
-      @for (link of navLinks; track link.href) {
-        <li class="nav-item">
-          <!-- Closing on tap matters: without it the drawer covers the section
-               the link just jumped to. -->
-          <a class="nav-link py-2 fw-medium" [href]="link.href" (click)="closeMenu()">
-            {{ link.label }}
-          </a>
-        </li>
-      }
-    </ul>
-    <div class="d-flex flex-column gap-2 mt-auto">
-      <a class="myc-btn-ghost shadow-none" routerLink="/login" (click)="closeMenu()">Sign in</a>
-      <a class="myc-btn-primary" routerLink="/register" (click)="closeMenu()">Get started</a>
-    </div>
-  </div>
-</aside>

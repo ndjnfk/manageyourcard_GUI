@@ -1,0 +1,144 @@
+<!-- One card's own page: every field on it, with Call and Edit.
+
+     Reached by tapping a customer's name in the dashboard panels or the
+     register. Everything is read-only here except through the Edit dialog —
+     the same one the dashboard uses, so a card is edited in one place. -->
+<app-shell>
+  <!-- Arrow only. The label is kept for screen readers rather than dropped:
+       an unlabelled back arrow is the one control a screen reader cannot
+       describe from its shape. -->
+  <a class="myc-icon-action" routerLink="/dashboard" aria-label="Back to your register">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 5 8 12l7 7" />
+    </svg>
+  </a>
+
+  <!-- Held to a column and centred. One card's worth of facts is a short list,
+       and stretched across a laptop the label and its value end up at opposite
+       ends of the screen with a hand's width of nothing between them. -->
+  <div class="row justify-content-center mt-3">
+    <div class="col-12 col-lg-9 col-xl-7">
+  @if (loading()) {
+    <div class="myc-glass text-center p-4 p-lg-5" role="status">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      Loading this card…
+    </div>
+  } @else if (loadError(); as message) {
+    <div class="myc-glass text-center p-4 p-lg-5">
+      <p class="fs-5 fw-semibold m-0">Could not open this card</p>
+      <p class="myc-measure-sm mx-auto mt-2 mb-4 text-body-secondary lh-base">{{ message }}</p>
+      <button type="button" class="myc-btn-ghost" (click)="load()">Try again</button>
+    </div>
+  } @else if (card(); as card) {
+    <!-- Dimmed when the card has expired, matching the register. It is still
+         fully readable — the point of this page is reading it. -->
+    <article class="myc-glass p-3 p-lg-4" [class.myc-card-expired]="expired()">
+      <header class="d-flex flex-wrap align-items-start gap-3">
+        <span
+          class="myc-avatar rounded-circle d-inline-flex align-items-center justify-content-center fw-semibold flex-shrink-0"
+          aria-hidden="true"
+        >
+          {{ initials() }}
+        </span>
+        <div class="flex-grow-1 min-w-0">
+          <p class="myc-eyebrow mb-1">Card {{ card.cardNumber }}</p>
+          <h1 class="myc-title m-0">{{ card.customerName }}</h1>
+        </div>
+        <span class="badge rounded-pill flex-shrink-0" [class]="badge().tone">{{ badge().label }}</span>
+      </header>
+
+      <dl class="mt-4 mb-0">
+        <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+          <dt class="fw-normal text-body-secondary">Mobile</dt>
+          <dd class="m-0 text-end">
+            <a class="fw-semibold text-decoration-none" [href]="'tel:' + card.customerMobile">
+              {{ card.customerMobile }}
+            </a>
+          </dd>
+        </div>
+
+        @if (dates(); as dates) {
+          @if (dates.issued) {
+            <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+              <dt class="fw-normal text-body-secondary">Issued</dt>
+              <dd class="m-0 text-end">{{ dates.issued | date: 'd MMM y' }}</dd>
+            </div>
+          }
+          @if (dates.due) {
+            <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+              <dt class="fw-normal text-body-secondary">Due</dt>
+              <dd class="m-0 text-end">{{ dates.due | date: 'd MMM y' }}</dd>
+            </div>
+          }
+          <!-- Said either way: "no expiry" is a real and common answer, and
+               leaving the row out reads as missing information instead. -->
+          <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+            <dt class="fw-normal text-body-secondary">Expires</dt>
+            <dd class="m-0 text-end">
+              @if (dates.expiry) {
+                {{ dates.expiry | date: 'd MMM y' }}
+              } @else {
+                <span class="text-body-tertiary">No expiry</span>
+              }
+            </dd>
+          </div>
+          @if (dates.renewed) {
+            <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+              <dt class="fw-normal text-body-secondary">Last renewed</dt>
+              <dd class="m-0 text-end">
+                {{ dates.renewed | date: 'd MMM y' }}
+                @if (card.renewalCount > 1) {
+                  <span class="text-body-tertiary">· {{ card.renewalCount }}×</span>
+                }
+              </dd>
+            </div>
+          }
+          @if (dates.completed) {
+            <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+              <dt class="fw-normal text-body-secondary">Closed</dt>
+              <dd class="m-0 text-end">{{ dates.completed | date: 'd MMM y' }}</dd>
+            </div>
+          }
+        }
+
+        <!-- Full width and last: a note is prose, not a fact, and squeezed into
+             the right-hand column it would wrap into an unreadable ribbon. -->
+        <div class="pt-3">
+          <dt class="fw-normal text-body-secondary mb-1">Note</dt>
+          <dd class="m-0">
+            @if (card.notes) {
+              <p class="m-0 lh-base">{{ card.notes }}</p>
+            } @else {
+              <span class="text-body-tertiary">No note on this card</span>
+            }
+          </dd>
+        </div>
+      </dl>
+
+      <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
+        <a class="myc-btn-ghost flex-grow-1" [href]="'tel:' + card.customerMobile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6.6 3.5h3l1.5 3.8-2 1.3a11 11 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" />
+          </svg>
+          Call {{ card.customerName }}
+        </a>
+        <!-- No Edit once the expiry has passed: renewing would not revive the
+             card, since expiry outranks the due date. Same rule as the
+             register, so the two cannot disagree about what can be done. -->
+        @if (!expired()) {
+          <button type="button" class="myc-btn-primary flex-grow-1" (click)="openEdit()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
+              <path d="M14.5 6.5 17.5 9.5" />
+            </svg>
+            Edit this card
+          </button>
+        }
+      </div>
+    </article>
+  }
+    </div>
+  </div>
+</app-shell>
+
+<app-edit-card (saved)="onSaved($event)" />

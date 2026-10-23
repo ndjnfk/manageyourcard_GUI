@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1051487653263",
+    "project_id": "manageyourcard-a0c1a",
+    "storage_bucket": "manageyourcard-a0c1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051487653263:android:cdc65a8f90735c30ebcffa",
+        "android_client_info": {
+          "package_name": "com.manageyourcard.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW_BOZagJBvBmnr1uZCzhalhiSI1QqFcM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

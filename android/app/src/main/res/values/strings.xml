@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">manageyourcard</string>
+    <string name="title_activity_main">manageyourcard</string>
+    <string name="package_name">com.manageyourcard.android</string>
+    <string name="custom_url_scheme">com.manageyourcard.android</string>
+
+    <!-- The channel every reminder lands in. Created by MainActivity on
+         startup: Android 8+ silently drops a notification whose channel does
+         not exist, and FCM does not create one for you. -->
+    <string name="default_notification_channel_id">due_reminders</string>
+    <string name="default_notification_channel_name">Card reminders</string>
+    <string name="default_notification_channel_description">Renewals and due dates for the cards in your register.</string>
+</resources>

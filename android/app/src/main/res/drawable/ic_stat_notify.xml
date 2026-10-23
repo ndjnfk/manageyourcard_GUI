@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The status-bar icon for a push notification.
+
+  A flat white silhouette, not the launcher icon. Android renders a status-bar
+  icon from its alpha channel alone — every colour is discarded and anything
+  opaque becomes solid white. A full-colour logo dropped in here comes out as a
+  featureless grey square, which is the single commonest way an Android
+  notification ends up looking broken.
+
+  So the app's card mark is drawn the only way a status-bar icon can carry it:
+  as the silhouette, with the magnetic stripe left as a gap rather than a fill.
+  Two masses, no fine detail — the chip from public/logo.svg is dropped, because
+  at 24dp and below it closes up into a notch in the lower bar. The purple comes
+  from `color: '#7B2FF7'` on the notification (see app/services/push.ts), which
+  Android uses to tint exactly this silhouette.
+
+  Geometry matches public/icons/badge-96x96.png, its web-push counterpart,
+  scaled 24 -> 96. Change one and change the other.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Above the stripe: rounded top corners, flat foot. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2,7.6 A2.3,2.3 0 0 1 4.3,5.3 H19.7 A2.3,2.3 0 0 1 22,7.6 V8.1 H2 Z" />
+    <!-- Below it: flat top, rounded bottom corners. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2,10.8 H22 V16.4 A2.3,2.3 0 0 1 19.7,18.7 H4.3 A2.3,2.3 0 0 1 2,16.4 Z" />
+</vector>

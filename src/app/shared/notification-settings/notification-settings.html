@@ -1,0 +1,163 @@
+<!-- Reminder settings: the two channels, the reminder window, and the browsers
+     registered for push.
+
+     Every toggle applies the moment it moves — there is no Save button here on
+     purpose. See the component for why. -->
+<section class="myc-glass p-4 p-lg-5" aria-labelledby="notify-heading">
+  <header class="mb-4">
+    <h2 class="notify__heading m-0" id="notify-heading">Reminders</h2>
+    <p class="notify__sub mt-2 mb-0 text-body-secondary">
+      Get told before a card falls due, so a renewal is never missed.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <p class="text-body-secondary m-0" role="status">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      Loading your settings…
+    </p>
+  } @else if (loadError(); as message) {
+    <p class="text-danger m-0" role="alert">{{ message }}</p>
+  } @else if (settings(); as state) {
+    <!-- ── Push ──────────────────────────────────────────────────────────
+         The switch is disabled when the browser or the server cannot deliver,
+         with the reason spelled out under it. An enabled switch that silently
+         does nothing is worse than a disabled one that says why. -->
+    <div class="notify__row">
+      <label class="myc-switch">
+        <input
+          type="checkbox"
+          class="myc-switch__input"
+          [checked]="state.preferences.push"
+          [disabled]="blocker() !== null || savingChannel() !== null"
+          (change)="togglePush($event)"
+          aria-describedby="notify-push-help"
+        />
+        <span class="myc-switch__track"></span>
+        <span class="notify__label">
+          On this device
+          @if (savingChannel() === 'push') {
+            <span class="spinner-border spinner-border-sm ms-2" aria-hidden="true"></span>
+          }
+        </span>
+      </label>
+
+      <p class="notify__help mb-0" id="notify-push-help">
+        @if (blockerText(); as reason) {
+          <span class="text-warning">{{ reason }}</span>
+        } @else {
+          A notification on this browser, even when the app is closed.
+        }
+      </p>
+    </div>
+
+    <!-- iOS will not deliver web push to a browser tab — only to an app added
+         to the home screen. Said here rather than left to fail silently,
+         because the toggle appears to work and then nothing ever arrives.
+
+         Hidden in the installed Android app, where it is simply untrue: it is
+         advice about web push, and telling someone to install an app they are
+         reading the advice inside of is worse than saying nothing. -->
+    @if (!isNativeApp) {
+      <p class="notify__note mb-0">
+        On iPhone and iPad, add manageyourcard to your home screen first —
+        Safari only delivers notifications to an installed app.
+      </p>
+    }
+
+    <hr class="notify__divider" />
+
+    <!-- ── Email ─────────────────────────────────────────────────────── -->
+    <div class="notify__row">
+      <label class="myc-switch">
+        <input
+          type="checkbox"
+          class="myc-switch__input"
+          [checked]="state.preferences.email"
+          [disabled]="!emailAvailable() || savingChannel() !== null"
+          (change)="toggleEmail($event)"
+          aria-describedby="notify-email-help"
+        />
+        <span class="myc-switch__track"></span>
+        <span class="notify__label">
+          By email
+          @if (savingChannel() === 'email') {
+            <span class="spinner-border spinner-border-sm ms-2" aria-hidden="true"></span>
+          }
+        </span>
+      </label>
+
+      <p class="notify__help mb-0" id="notify-email-help">
+        @if (!emailAvailable()) {
+          <span class="text-warning">
+            The server has no email credentials yet, so nothing can be sent.
+          </span>
+        } @else {
+          One summary a day to your registered address, only when something is due.
+        }
+      </p>
+    </div>
+
+    <hr class="notify__divider" />
+
+    <!-- ── How far ahead ─────────────────────────────────────────────── -->
+    <div class="notify__row">
+      <label class="myc-label" for="notify-lead">Start reminding me</label>
+      <select
+        id="notify-lead"
+        class="myc-input notify__select"
+        [value]="leadDays()"
+        [disabled]="savingChannel() !== null"
+        (change)="changeLeadDays($event)"
+        aria-describedby="notify-lead-help"
+      >
+        @for (days of leadOptions; track days) {
+          <option [value]="days">
+            {{ days === 1 ? '1 day' : days + ' days' }} before the due date
+          </option>
+        }
+      </select>
+      <p class="notify__help mb-0" id="notify-lead-help">
+        Cards already overdue are always included, however far back they go.
+      </p>
+    </div>
+
+    <!-- ── Registered devices ────────────────────────────────────────── -->
+    @if (devices().length > 0) {
+      <hr class="notify__divider" />
+
+      <h3 class="notify__subheading">This shop's devices</h3>
+      <ul class="notify__devices">
+        @for (device of devices(); track device.id) {
+          <li class="notify__device">
+            <span class="notify__device-name">{{ describeDevice(device) }}</span>
+            <span class="notify__device-meta">{{ lastSeen(device) }}</span>
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- ── Test ──────────────────────────────────────────────────────── -->
+    @if (state.preferences.push || state.preferences.email) {
+      <hr class="notify__divider" />
+
+      <button
+        type="button"
+        class="myc-btn-ghost myc-btn-sm"
+        [disabled]="testing()"
+        [attr.aria-busy]="testing()"
+        (click)="sendTest()"
+      >
+        @if (testing()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          Sending…
+        } @else {
+          Send me one now
+        }
+      </button>
+      <p class="notify__help mb-0 mt-2">
+        Sends today's real reminder, so you can check it arrives and reads well.
+      </p>
+    }
+  }
+</section>

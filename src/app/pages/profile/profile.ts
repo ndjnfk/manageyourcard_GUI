@@ -11,6 +11,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiError } from '../../shared/api';
 import { AppShell } from '../../shared/app-shell/app-shell';
 import { Auth } from '../../shared/auth';
+import { NotificationSettings } from '../../shared/notification-settings/notification-settings';
 import { Toasts } from '../../shared/toast';
 import { mobileValidator } from '../../shared/validators';
 
@@ -45,7 +46,7 @@ function initialsOf(name: string): string {
  */
 @Component({
   selector: 'app-profile',
-  imports: [AppShell, ReactiveFormsModule],
+  imports: [AppShell, NotificationSettings, ReactiveFormsModule],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

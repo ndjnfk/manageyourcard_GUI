@@ -1,0 +1,145 @@
+// Small shared pieces: rails, panels, dots, avatars, status looks.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.min-w-0 {
+  min-width: 0;
+}
+
+/// Android Chrome paints a grey flash over taps; nothing in this theme wants
+/// it. Applied to every control the app renders.
+button,
+[role="button"],
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/// Off-screen until focused, for keyboard users.
+.myc-skip-link {
+  top: -4rem;
+  left: 1rem;
+  z-index: 1100;
+  background: var(--myc-bg-raised);
+  color: var(--myc-text);
+  transition: top 0.2s ease;
+
+  &:focus {
+    top: 1rem;
+    color: var(--myc-text);
+  }
+}
+
+/// Swipeable snap rail on phones, plain grid from lg up — the pattern any
+/// horizontal card list in the app should use. Set --myc-rail-cols for the
+/// desktop column count; spacing comes from Bootstrap's gap-* utilities.
+.myc-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(85%, 21rem);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--myc-glass-border) transparent;
+  // Bleed to the screen edges so a peeking next card hints that it scrolls.
+  margin-inline: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+  padding: 0.75rem calc(var(--bs-gutter-x, 1.5rem) * 0.5) 1.25rem;
+
+  > * {
+    scroll-snap-align: center;
+  }
+
+  @media (min-width: 992px) {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(var(--myc-rail-cols, 3), 1fr);
+    overflow: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+/// A panel with its own bloom behind it — for bands that need to lift off the
+/// canvas (closing CTAs, empty states, promo blocks).
+.myc-glow-panel {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -40% 20% auto;
+    height: 120%;
+    background: radial-gradient(closest-side, rgba(193, 58, 245, 0.35), transparent);
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+  }
+}
+
+// --- Small parts --------------------------------------------------------------
+// Each supplies only what Bootstrap can't: a size, a gradient, a glow. Flex
+// centring, radius and spacing come from utility classes at the call site.
+
+/// Status dot. Takes its colour from the element, so Bootstrap's text-success /
+/// text-warning / text-danger drive it — which is how card states are shown.
+.myc-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+/// The two ways a card can be finished, in place of Bootstrap's danger red.
+///
+/// An expired card is *done*, not urgent. Red is the loudest colour on this
+/// canvas and it is spent on the cards worth chasing — overdue ones, which keep
+/// it. Giving the same red to a card nobody can act on any more trains the eye
+/// to ignore the colour, which costs the overdue cards their only signal.
+///
+/// Muted rather than hidden: the card is still in the register and still
+/// readable, it simply stops shouting.
+.myc-badge-expired {
+  color: var(--myc-text-muted);
+  background: var(--myc-glass-bg-strong);
+  border: 1px solid var(--myc-glass-border);
+}
+
+/// Text counterpart, for the relative line and the timeline day. Pairs with
+/// .myc-dot, which takes its colour from here.
+.myc-text-expired {
+  color: var(--myc-text-faint);
+}
+
+/// Dims a whole finished card without removing it from the register.
+.myc-card-expired {
+  opacity: 0.62;
+}
+
+/// Gradient icon tile — pair with .d-inline-flex .align-items-center
+/// .justify-content-center .rounded-3.
+.myc-icon-tile {
+  width: 3rem;
+  height: 3rem;
+  background: var(--myc-gradient-cool);
+  box-shadow: var(--myc-glow-violet);
+  flex: 0 0 auto;
+}
+
+/// Initials avatar — pair with .rounded-circle and flex centring.
+.myc-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--myc-gradient-cool);
+  flex: 0 0 auto;
+}
+
+/// Search / text field on the dark canvas — a glass pill wrapping an icon and
+/// an <input class="myc-field__input">. Bootstrap's .form-control is a boxed,
+/// bordered field and fights the theme.

@@ -1,0 +1,249 @@
+// The native <dialog> shell shared by the add, edit and details forms.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.myc-dialog {
+  // The UA stylesheet gives dialogs a border, padding, a white background and
+  // an auto width/margin. All of it is in the way here.
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--myc-text);
+  overflow: hidden;
+
+  // The dialog element is the full-viewport flex container; the panel inside
+  // it is the card. `inset: 0` alone is not enough to stretch it — the UA
+  // stylesheet sets `width/height: fit-content` on <dialog>, and an explicit
+  // size beats insets, so without these two the box shrinks to its contents
+  // and `align-items` has nothing to centre within. That is what left it
+  // stuck against the top of the screen.
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::backdrop {
+    background: rgba(6, 3, 18, 0.72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+
+  // A closed dialog must not be laid out at all — without this it would still
+  // take part in the flex/inset rules above and cover the page.
+  &:not([open]) {
+    display: none;
+  }
+
+  // A date input's own calendar icon is painted almost black on this canvas.
+  // Inverting it is the only way to recolour it from CSS.
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.6;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/// The card itself, centred in the dialog above.
+///
+/// `dvh` rather than `vh` so the mobile browser's collapsing address bar
+/// doesn't leave the footer hidden behind it. 100% of the parent would be
+/// wrong here — the parent already carries the padding that keeps the card
+/// off the edges of the screen.
+.myc-dialog__panel {
+  @include glass(var(--myc-glass-bg-strong), var(--myc-radius));
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 34rem;
+  max-height: min(90dvh, 46rem);
+
+  animation: myc-dialog-appear 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.myc-dialog__head {
+  padding: 1.25rem 1.25rem 0.875rem;
+  border-bottom: 1px solid var(--myc-glass-border);
+}
+
+.myc-dialog__title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/// The only part that scrolls. `overscroll-behavior: contain` stops a flick at
+/// the end of it from scrolling the page behind the sheet.
+.myc-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.myc-dialog__foot {
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--myc-glass-border);
+
+  // Full-width stacked buttons on a phone — a 44px target is hard to hit at
+  // the corner of a small screen otherwise. flex-column-reverse in the markup
+  // puts the primary action on top, where the thumb already is.
+  > * {
+    width: 100%;
+  }
+}
+
+/// Sits under a field carrying either its hint or its error. Matches the size
+/// used by the register and sign-in forms.
+.myc-dialog__msg {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+// ── From sm up: more breathing room, buttons back on one row ─────────────────
+@media (min-width: 576px) {
+  .myc-dialog {
+    padding: 1.5rem;
+  }
+
+  .myc-dialog__head,
+  .myc-dialog__body,
+  .myc-dialog__foot {
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+  }
+
+  .myc-dialog__foot {
+    padding-bottom: 1.25rem;
+
+    > * {
+      width: auto;
+    }
+  }
+}
+
+@keyframes myc-dialog-appear {
+  from {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+}
+
+// Movement is decoration here — a dialog is just as usable without it.
+@media (prefers-reduced-motion: reduce) {
+  .myc-dialog__panel {
+    animation: none;
+  }
+}
+
+// =============================================================================
+// Switch
+// -----------------------------------------------------------------------------
+// An on/off control for a state that takes effect immediately on save, rather
+// than a checkbox in a list. Wrap a real checkbox so it stays keyboard- and
+// screen-reader-operable:
+//
+//   <label class="myc-switch">
+//     <input type="checkbox" class="myc-switch__input">
+//     <span class="myc-switch__track"></span>
+//     <span>Label</span>
+//   </label>
+// =============================================================================
+
+.myc-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+/// Kept in the accessibility tree and focusable — only visually replaced by
+/// the track beside it. opacity:0 rather than display:none for that reason.
+.myc-switch__input {
+  position: absolute;
+  width: 2.75rem;
+  height: 1.55rem;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.myc-switch__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 1.55rem;
+  border: 1px solid var(--myc-glass-border);
+  border-radius: var(--myc-radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0.18rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    background: var(--myc-text);
+    transform: translateY(-50%);
+    transition: transform 160ms ease;
+  }
+}
+
+.myc-switch__input:checked + .myc-switch__track {
+  background: var(--myc-gradient-cool);
+  border-color: transparent;
+
+  &::after {
+    transform: translateY(-50%) translateX(1.15rem);
+  }
+}
+
+.myc-switch__input:focus-visible + .myc-switch__track {
+  outline: 2px solid var(--myc-violet-bright);
+  outline-offset: 2px;
+}
+
+.myc-switch__input:disabled ~ * {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myc-switch__track,
+  .myc-switch__track::after {
+    transition: none;
+  }
+}
+
+// =============================================================================
+// Applying the theme
+// =============================================================================
+// Page shell:   <div class="myc-canvas"> … <div class="myc-glass"> … </div> </div>
+// In a component's .scss:
+//   @use "../../../styles/mixins" as mixins;
+//   .balance-card { @include mixins.glass; }
+//
+// Bootstrap is already told to use this palette in src/styles.scss (see the
+// `@use "bootstrap/scss/bootstrap" with (...)` block) and <html> carries
+// data-bs-theme="dark" so Bootstrap's own components render dark.
+// =============================================================================

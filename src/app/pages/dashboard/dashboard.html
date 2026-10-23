@@ -75,7 +75,10 @@
             Cards due today and anything already overdue — clear these before the shop closes.
           </span>
         </p>
-        <button type="button" class="myc-btn-ghost myc-btn-sm" (click)="setFilter('today')">
+        <!-- Down to the panels, which are the list this banner is counting.
+             It used to filter the register instead and leave the page where it
+             was, so the button named something and then did not show it. -->
+        <button type="button" class="myc-btn-ghost myc-btn-sm" (click)="scrollToPanels()">
           Show them
         </button>
       </div>
@@ -96,6 +99,16 @@
                 [class.stat--on]="filter() === stat.filter"
                 [attr.aria-pressed]="filter() === stat.filter"
                 (click)="setFilter(stat.filter)"
+              >
+                <ng-container [ngTemplateOutlet]="tile" [ngTemplateOutletContext]="{ $implicit: stat }" />
+              </button>
+            } @else if (stat.scrolls) {
+              <!-- Not a filter: its 30-day window is not one of the register's
+                   buckets, so it jumps to the panel that lists it instead. -->
+              <button
+                type="button"
+                class="myc-glass stat h-100 w-100 p-3 p-lg-4 text-start"
+                (click)="scrollToPanels()"
               >
                 <ng-container [ngTemplateOutlet]="tile" [ngTemplateOutletContext]="{ $implicit: stat }" />
               </button>
@@ -192,7 +205,13 @@
         <div class="row g-3">
           @for (card of shownCards(); track card.cardId) {
             <div class="col-12 col-md-6 col-xl-4">
-              <article class="myc-glass card-tile h-100 p-3 p-lg-4" [class.card-tile--alert]="card.state === 'expired'">
+              <!-- The red edge is for cards still worth chasing, so an expired
+                   one drops it and dims instead: it is finished, not urgent. -->
+              <article
+                class="myc-glass card-tile h-100 p-3 p-lg-4"
+                [class.card-tile--alert]="card.state === 'expired' && !card.expired"
+                [class.myc-card-expired]="card.expired"
+              >
                 <!-- Head: who the card belongs to, and where it stands. -->
                 <div class="d-flex align-items-start gap-3">
                   <span
@@ -202,7 +221,18 @@
                     {{ card.initials }}
                   </span>
                   <div class="flex-grow-1 min-w-0">
-                    <h3 class="fs-6 fw-semibold mb-1 text-truncate">{{ card.customer }}</h3>
+                    <!-- The name opens the card's own page, where every field
+                         and both actions live. The tile only has room for the
+                         few things worth seeing at a glance. -->
+                    <h3 class="fs-6 fw-semibold mb-1 text-truncate">
+                      <a
+                        class="myc-name-link"
+                        [attr.aria-label]="'Open card ' + card.cardNumber + ' for ' + card.customer"
+                        [routerLink]="['/cards', card.cardId]"
+                      >
+                        {{ card.customer }}
+                      </a>
+                    </h3>
                     <!-- Renewed cards say so under the name, with when it last
                          happened. A card that has been renewed is a customer
                          who came back, and the date is what makes that useful
@@ -271,19 +301,43 @@
                     Call
                   </a>
                   <!-- Renewing lives inside Edit now, alongside the other
-                       things that change what a card is. -->
-                  <button
-                    type="button"
-                    class="myc-btn-primary myc-btn-sm flex-grow-1"
-                    [attr.aria-label]="'Edit card ' + card.cardNumber + ' for ' + card.customer"
-                    (click)="openEditCard(card.cardId)"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
-                      <path d="M14.5 6.5 17.5 9.5" />
-                    </svg>
-                    Edit
-                  </button>
+                       things that change what a card is.
+
+                       An expired card has no Edit at all: its renewal would
+                       not revive it, since expiry outranks the due date. Note
+                       that this also takes away the only way to mark it
+                       Completed, so an expired card cannot be cleared out of
+                       the register — a deliberate choice, not an oversight. -->
+                  @if (card.expired) {
+                    <!-- Details in Edit's place. An expired card still has to
+                         be readable — the note, the dates, the number — even
+                         though nothing about it can be changed any more. -->
+                    <button
+                      type="button"
+                      class="myc-btn-ghost myc-btn-sm flex-grow-1"
+                      [attr.aria-label]="'Details of card ' + card.cardNumber + ' for ' + card.customer"
+                      (click)="openCardDetails(card.cardId)"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 11v5M12 7.6v.6" />
+                      </svg>
+                      Details
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="myc-btn-primary myc-btn-sm flex-grow-1"
+                      [attr.aria-label]="'Edit card ' + card.cardNumber + ' for ' + card.customer"
+                      (click)="openEditCard(card.cardId)"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
+                        <path d="M14.5 6.5 17.5 9.5" />
+                      </svg>
+                      Edit
+                    </button>
+                  }
                 </div>
               </article>
             </div>
@@ -325,7 +379,7 @@
     <!-- ── Renewals + overdue ───────────────────────────────────────────
          Side by side on a laptop, stacked on a phone. Both are read-only
          summaries — acting on a card happens in the register above. -->
-    <section class="row g-3 g-lg-4 mt-4" aria-label="Renewals and overdue cards">
+    <section #panels class="row g-3 g-lg-4 mt-4" aria-label="Renewals and overdue cards">
       <div class="col-12 col-lg-7">
         <div class="myc-glass h-100 p-3 p-lg-4">
           <div class="d-flex justify-content-between align-items-baseline gap-2 mb-3">
@@ -339,12 +393,21 @@
                 <span class="d-block fw-bold lh-1">{{ card.due | date: 'd' }}</span>
                 <span class="d-block dash-meta text-uppercase">{{ card.due | date: 'MMM' }}</span>
               </span>
-              <span class="flex-grow-1 min-w-0">
+              <!-- The name opens the card's own page, which carries Call and
+                   Edit. It used to scroll up to the card in the register, and
+                   that only worked when the card happened to be on screen — a
+                   filter, a search or the two-row limit could all be hiding it.
+                   A page is always reachable, and survives a reload. -->
+              <a
+                class="myc-name-link flex-grow-1 min-w-0 text-start"
+                [attr.aria-label]="'Open card ' + card.cardNumber + ' for ' + card.customer"
+                [routerLink]="['/cards', card.cardId]"
+              >
                 <span class="d-block fw-medium text-truncate">{{ card.customer }}</span>
                 <span class="d-block dash-meta text-body-tertiary">
                   {{ card.cardNumber }}
                 </span>
-              </span>
+              </a>
               <span class="small flex-shrink-0" [class]="card.meta.tone">{{ card.relative }}</span>
             </div>
           } @empty {
@@ -377,12 +440,16 @@
           @for (card of overdue(); track card.cardId) {
             <div class="d-flex align-items-center gap-3 py-2 timeline-row">
               <i class="myc-dot text-danger" aria-hidden="true"></i>
-              <span class="flex-grow-1 min-w-0">
+              <a
+                class="myc-name-link flex-grow-1 min-w-0 text-start"
+                [attr.aria-label]="'Open card ' + card.cardNumber + ' for ' + card.customer"
+                [routerLink]="['/cards', card.cardId]"
+              >
                 <span class="d-block fw-medium text-truncate">{{ card.customer }}</span>
                 <span class="d-block dash-meta text-body-tertiary">
                   {{ card.cardNumber }} · due {{ card.due | date: 'd MMM' }}
                 </span>
-              </span>
+              </a>
               <span class="small text-danger flex-shrink-0">{{ card.relative }}</span>
             </div>
           } @empty {
@@ -417,6 +484,8 @@
      become their containing block and clip them to the page. -->
 <app-add-card (created)="onCardCreated($event)" />
 <app-edit-card (saved)="onCardSaved($event)" />
+<!-- No output: it only reads. -->
+<app-card-details />
 
 <!-- ── Templates ────────────────────────────────────────────────────────────
      A stat tile renders the same whether it is a filter button or a plain

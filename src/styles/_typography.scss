@@ -1,0 +1,78 @@
+// Headings, eyebrows and reading measures.
+//
+// Part of the theme — see _theme.scss, which forwards every partial in this
+// folder. These rules are global on purpose: most are used by a dozen
+// components, and a component stylesheet would scope them to one.
+
+@use "mixins" as *;
+
+.myc-eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--myc-violet-bright);
+}
+
+.myc-title {
+  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.myc-title--hero {
+  font-size: clamp(2.25rem, 7.5vw, 4.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.myc-title-accent {
+  @include gradient-text(var(--myc-gradient-primary));
+}
+
+.myc-lead {
+  font-size: clamp(1rem, 2.2vw, 1.125rem);
+  line-height: 1.65;
+}
+
+/// A customer's name where it opens that card's page.
+///
+/// Global rather than per-component: the same link appears on the dashboard
+/// tiles, the dashboard's renewals and overdue panels, and the register rows,
+/// and three copies of it would drift apart.
+///
+/// It has to read as the heading it replaced — the layouts around it size and
+/// truncate on that text — so it inherits colour and weight and only announces
+/// itself on hover and keyboard focus.
+.myc-name-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+/// Readable line length. Bootstrap has no max-width utility beyond mw-100.
+.myc-measure {
+  max-width: 44rem;
+}
+
+.myc-measure-sm {
+  max-width: 36rem;
+}
+
+// --- Layout -------------------------------------------------------------------
+
+/// Vertical rhythm between page sections.
+.myc-section {
+  padding-block: var(--myc-section-gap);
+}
+
+/// Glass app bar. Pair with Bootstrap's .sticky-top and .border-bottom.

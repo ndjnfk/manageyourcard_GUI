@@ -77,7 +77,14 @@ export interface NewCard {
 }
 
 /** The buckets the register can be narrowed to. Mirrors the API's own list. */
-export type CardFilter = 'all' | 'active' | 'today' | 'week' | 'expired';
+/**
+ * The buckets the register can be narrowed to. Mirrors the API's own list.
+ *
+ * 'overdue' and 'expired' are separate: an overdue card is worth chasing, an
+ * expired one cannot be renewed at all, and mixing them padded the chase list
+ * with cards nobody could act on.
+ */
+export type CardFilter = 'all' | 'active' | 'today' | 'week' | 'overdue' | 'expired';
 
 /** How a listing is narrowed and paged. */
 export interface ListOptions {
@@ -117,6 +124,19 @@ export class Cards {
    */
   list(): Observable<Card[]> {
     return this.http.get<{ data: Card[] }>(`${API_BASE_URL}/cards`).pipe(
+      map((response) => response.data),
+      catchError((error: HttpErrorResponse) => throwError(() => toApiError(error))),
+    );
+  }
+
+  /**
+   * One card, by its CardID — what the card's own page loads.
+   *
+   * Fetched rather than passed in from whichever list was on screen, so the
+   * page survives a reload, a bookmark or a link shared between two devices.
+   */
+  get(cardId: string): Observable<Card> {
+    return this.http.get<{ data: Card }>(`${API_BASE_URL}/cards/${cardId}`).pipe(
       map((response) => response.data),
       catchError((error: HttpErrorResponse) => throwError(() => toApiError(error))),
     );
